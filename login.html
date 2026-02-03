@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - Form Builder</title>
+    <title>Connexion Admin - Créateur de Formulaires</title>
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
     <div class="auth-wrapper">
         <div class="auth-card">
-            <h1 class="auth-title">Form Builder</h1>
-            <p class="auth-subtitle" id="authSubtitle">Sign in to manage your forms</p>
+            <h1 class="auth-title">Créateur de Formulaires</h1>
+            <p class="auth-subtitle" id="authSubtitle">Connectez-vous pour gérer vos formulaires</p>
 
             <!-- Error message -->
             <div id="errorMessage" class="form-error text-center mb-2" style="display: none;"></div>
@@ -23,19 +23,19 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
+                    <label class="form-label" for="password">Mot de passe</label>
                     <input type="password" id="password" class="form-input" required autocomplete="current-password">
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginBtn">
-                    Sign In
+                    Se connecter
                 </button>
             </form>
 
             <!-- Register Form (hidden by default) -->
             <form id="registerForm" style="display: none;">
                 <div class="form-group">
-                    <label class="form-label" for="regDisplayName">Display Name</label>
+                    <label class="form-label" for="regDisplayName">Nom d'affichage</label>
                     <input type="text" id="regDisplayName" class="form-input" required>
                 </div>
 
@@ -45,25 +45,25 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="regPassword">Password</label>
+                    <label class="form-label" for="regPassword">Mot de passe</label>
                     <input type="password" id="regPassword" class="form-input" required minlength="6" autocomplete="new-password">
-                    <p class="form-hint">At least 6 characters</p>
+                    <p class="form-hint">Au moins 6 caractères</p>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="regPasswordConfirm">Confirm Password</label>
+                    <label class="form-label" for="regPasswordConfirm">Confirmer le mot de passe</label>
                     <input type="password" id="regPasswordConfirm" class="form-input" required minlength="6" autocomplete="new-password">
                 </div>
 
                 <input type="hidden" id="inviteToken">
 
                 <button type="submit" class="btn btn-primary" style="width: 100%;" id="registerBtn">
-                    Create Account
+                    Créer le compte
                 </button>
             </form>
 
             <div class="mt-3 text-center">
-                <a href="index.html">← Back to forms</a>
+                <a href="index.html">← Retour aux formulaires</a>
             </div>
         </div>
     </div>
@@ -87,7 +87,7 @@
 
         // Show error from URL params
         if (errorParam === 'not_admin') {
-            showError('You are not authorized as an admin');
+            showError('Vous n\'êtes pas autorisé en tant qu\'admin');
         }
 
         // Initialize
@@ -114,7 +114,7 @@
                 if (invite) {
                     showRegisterForm(invite);
                 } else {
-                    showError('This invitation link is invalid or has expired');
+                    showError('Ce lien d\'invitation est invalide ou a expiré');
                 }
             }
         }
@@ -122,7 +122,7 @@
         function showRegisterForm(invite) {
             loginForm.style.display = 'none';
             registerForm.style.display = 'block';
-            authSubtitle.textContent = 'Create your admin account';
+            authSubtitle.textContent = 'Créez votre compte administrateur';
 
             document.getElementById('regEmail').value = invite.email;
             document.getElementById('inviteToken').value = inviteToken;
@@ -172,7 +172,7 @@
 
             // Validate passwords match
             if (password !== passwordConfirm) {
-                showError('Passwords do not match');
+                showError('Les mots de passe ne correspondent pas');
                 return;
             }
 
@@ -180,7 +180,7 @@
 
             try {
                 await Auth.register(email, password, displayName, token);
-                Utils.showToast('Account created! Please check your email to confirm.', 'success');
+                Utils.showToast('Compte créé ! Veuillez vérifier votre email pour confirmer.', 'success');
 
                 // Try to log in automatically
                 setTimeout(async () => {

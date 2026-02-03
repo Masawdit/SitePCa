@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Form Builder</title>
+    <title>Tableau de bord Admin - Créateur de Formulaires</title>
     <link rel="stylesheet" href="../css/main.css">
     <style>
         .form-card {
@@ -89,11 +89,11 @@
     <!-- Header -->
     <header class="header">
         <div class="container">
-            <a href="../index.html" class="header-logo">Form Builder</a>
+            <a href="../index.html" class="header-logo">Créateur de Formulaires</a>
             <nav class="header-nav">
                 <span class="admin-name" id="adminName">Admin</span>
-                <a href="invite.html">Invite Admin</a>
-                <a href="#" id="logoutBtn">Logout</a>
+                <a href="invite.html">Inviter un Admin</a>
+                <a href="#" id="logoutBtn">Déconnexion</a>
             </nav>
         </div>
     </header>
@@ -101,42 +101,42 @@
     <!-- Main Content -->
     <div class="page-wrapper">
         <div class="container">
-            <h1 class="mb-3">Dashboard</h1>
+            <h1 class="mb-3">Tableau de bord</h1>
 
             <!-- Stats -->
             <div class="dashboard-stats" id="stats">
                 <div class="stat-card">
                     <div class="stat-value" id="totalForms">-</div>
-                    <div class="stat-label">Total Forms</div>
+                    <div class="stat-label">Total Formulaires</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="publishedForms">-</div>
-                    <div class="stat-label">Published</div>
+                    <div class="stat-label">Publiés</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="totalResponses">-</div>
-                    <div class="stat-label">Responses</div>
+                    <div class="stat-label">Réponses</div>
                 </div>
             </div>
 
             <!-- Forms Section -->
             <div class="section-header">
-                <h2 class="section-title">Your Forms</h2>
-                <a href="builder.html" class="btn btn-primary">+ Create Form</a>
+                <h2 class="section-title">Vos Formulaires</h2>
+                <a href="builder.html" class="btn btn-primary">+ Créer un formulaire</a>
             </div>
 
             <!-- Loading state -->
             <div id="loadingState" class="card text-center">
                 <div class="spinner" style="margin: 0 auto;"></div>
-                <p class="mt-2 text-muted">Loading forms...</p>
+                <p class="mt-2 text-muted">Chargement des formulaires...</p>
             </div>
 
             <!-- Empty state -->
             <div id="emptyState" class="card empty-state" style="display: none;">
                 <div class="empty-state-icon">📝</div>
-                <h3>No forms yet</h3>
-                <p class="text-muted">Create your first form to get started</p>
-                <a href="builder.html" class="btn btn-primary mt-2">Create Form</a>
+                <h3>Aucun formulaire</h3>
+                <p class="text-muted">Créez votre premier formulaire pour commencer</p>
+                <a href="builder.html" class="btn btn-primary mt-2">Créer un formulaire</a>
             </div>
 
             <!-- Forms list -->
@@ -148,16 +148,16 @@
     <div class="modal-overlay" id="deleteModal">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title">Delete Form</h3>
+                <h3 class="modal-title">Supprimer le formulaire</h3>
                 <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete "<strong id="deleteFormTitle"></strong>"?</p>
-                <p class="text-muted">This action cannot be undone. All fields and responses will be permanently deleted.</p>
+                <p>Êtes-vous sûr de vouloir supprimer "<strong id="deleteFormTitle"></strong>" ?</p>
+                <p class="text-muted">Cette action est irréversible. Tous les champs et réponses seront définitivement supprimés.</p>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
-                <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Annuler</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">Supprimer</button>
             </div>
         </div>
     </div>
@@ -215,7 +215,7 @@
                 }
             } catch (err) {
                 console.error('Error loading forms:', err);
-                loadingState.innerHTML = '<p class="text-danger">Error loading forms</p>';
+                loadingState.innerHTML = '<p class="text-danger">Erreur lors du chargement des formulaires</p>';
             }
         }
 
@@ -230,22 +230,22 @@
                         <div class="form-card-code">${form.code}</div>
                         <div class="form-card-meta">
                             <span class="badge ${form.is_published ? 'badge-success' : 'badge-secondary'}">
-                                ${form.is_published ? 'Published' : 'Draft'}
+                                ${form.is_published ? 'Publié' : 'Brouillon'}
                             </span>
-                            <span style="margin-left: 0.5rem;">Created ${Utils.formatDate(form.created_at)}</span>
+                            <span style="margin-left: 0.5rem;">Créé le ${Utils.formatDate(form.created_at)}</span>
                         </div>
                     </div>
                     <div class="form-card-actions">
                         ${form.is_published ? `
-                            <a href="../form.html?id=${form.id}" class="btn btn-sm btn-outline" target="_blank">View</a>
+                            <a href="../form.html?id=${form.id}" class="btn btn-sm btn-outline" target="_blank">Voir</a>
                         ` : ''}
-                        <a href="builder.html?id=${form.id}" class="btn btn-sm btn-secondary">Edit</a>
+                        <a href="builder.html?id=${form.id}" class="btn btn-sm btn-secondary">Modifier</a>
                         <button class="btn btn-sm btn-${form.is_published ? 'warning' : 'success'}"
                                 onclick="togglePublish('${form.id}', ${form.is_published})">
-                            ${form.is_published ? 'Unpublish' : 'Publish'}
+                            ${form.is_published ? 'Dépublier' : 'Publier'}
                         </button>
                         <button class="btn btn-sm btn-danger" onclick="showDeleteModal('${form.id}', '${Utils.escapeHtml(form.title).replace(/'/g, "\\'")}')">
-                            Delete
+                            Supprimer
                         </button>
                     </div>
                 </div>
@@ -301,12 +301,12 @@
 
                 if (error) throw error;
 
-                Utils.showToast(currentStatus ? 'Form unpublished' : 'Form published!', 'success');
+                Utils.showToast(currentStatus ? 'Formulaire dépublié' : 'Formulaire publié !', 'success');
                 await loadForms();
                 await loadStats();
             } catch (err) {
                 console.error('Error toggling publish:', err);
-                Utils.showToast('Error updating form', 'error');
+                Utils.showToast('Erreur lors de la mise à jour', 'error');
             }
         }
 
@@ -338,12 +338,12 @@
                 if (error) throw error;
 
                 closeDeleteModal();
-                Utils.showToast('Form deleted', 'success');
+                Utils.showToast('Formulaire supprimé', 'success');
                 await loadForms();
                 await loadStats();
             } catch (err) {
                 console.error('Error deleting form:', err);
-                Utils.showToast('Error deleting form', 'error');
+                Utils.showToast('Erreur lors de la suppression', 'error');
             } finally {
                 Utils.setButtonLoading(btn, false);
             }

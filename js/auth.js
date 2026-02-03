@@ -52,7 +52,7 @@ const Auth = {
 
         if (adminError || !admin) {
             await this.logout();
-            throw new Error('You are not authorized as an admin');
+            throw new Error('Vous n\'êtes pas autorisé en tant qu\'admin');
         }
 
         return { user: data.user, admin };
@@ -70,12 +70,12 @@ const Auth = {
             .single();
 
         if (inviteError || !invite) {
-            throw new Error('Invalid or expired invitation');
+            throw new Error('Invitation invalide ou expirée');
         }
 
         // Check if email matches invite
         if (invite.email.toLowerCase() !== email.toLowerCase()) {
-            throw new Error('Email does not match the invitation');
+            throw new Error('L\'email ne correspond pas à l\'invitation');
         }
 
         // Create auth user
@@ -103,7 +103,7 @@ const Auth = {
 
         if (adminError) {
             console.error('Admin creation error:', adminError);
-            throw new Error('Failed to create admin profile');
+            throw new Error('Échec de la création du profil admin');
         }
 
         // Mark invite as used
@@ -142,7 +142,7 @@ const Auth = {
     async createInvite(email) {
         const user = await this.getUser();
         if (!user) {
-            throw new Error('Not authenticated');
+            throw new Error('Non authentifié');
         }
 
         const token = Utils.generateInviteToken();
@@ -162,7 +162,7 @@ const Auth = {
 
         if (error) {
             if (error.code === '23505') {
-                throw new Error('An invite for this email already exists');
+                throw new Error('Une invitation pour cet email existe déjà');
             }
             throw new Error(error.message);
         }

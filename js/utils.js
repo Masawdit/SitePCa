@@ -47,7 +47,7 @@ const Utils = {
         if (loading) {
             button.disabled = true;
             button.dataset.originalText = button.textContent;
-            button.textContent = 'Loading...';
+            button.textContent = 'Chargement...';
         } else {
             button.disabled = false;
             button.textContent = button.dataset.originalText || button.textContent;
@@ -78,7 +78,7 @@ const Utils = {
     // Format date for display
     formatDate(dateString) {
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
+        return date.toLocaleDateString('fr-FR', {
             year: 'numeric',
             month: 'short',
             day: 'numeric'

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form Builder - Admin</title>
+    <title>Créateur de Formulaires - Admin</title>
     <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/builder.css">
 </head>
@@ -11,10 +11,10 @@
     <!-- Header -->
     <header class="header">
         <div class="container">
-            <a href="dashboard.html" class="header-logo">Form Builder</a>
+            <a href="dashboard.html" class="header-logo">Créateur de Formulaires</a>
             <nav class="header-nav">
-                <a href="dashboard.html">Dashboard</a>
-                <a href="#" id="logoutBtn">Logout</a>
+                <a href="dashboard.html">Tableau de bord</a>
+                <a href="#" id="logoutBtn">Déconnexion</a>
             </nav>
         </div>
     </header>
@@ -23,7 +23,7 @@
     <div class="page-wrapper">
         <div class="container">
             <div class="flex-between mb-3">
-                <h1 id="pageTitle">Create New Form</h1>
+                <h1 id="pageTitle">Créer un nouveau formulaire</h1>
                 <div class="flex gap-1">
                     <span class="badge badge-secondary" id="formCode"></span>
                 </div>
@@ -32,7 +32,7 @@
             <div class="builder-layout">
                 <!-- Sidebar - Field Types -->
                 <aside class="builder-sidebar">
-                    <h3 class="sidebar-title">Add Field</h3>
+                    <h3 class="sidebar-title">Ajouter un champ</h3>
                     <div id="fieldTypesList"></div>
                 </aside>
 
@@ -40,35 +40,35 @@
                 <main class="builder-main">
                     <!-- Form Settings -->
                     <div class="form-settings">
-                        <h3 class="mb-2">Form Settings</h3>
+                        <h3 class="mb-2">Paramètres du formulaire</h3>
                         <div class="form-settings-grid">
                             <div class="form-group">
-                                <label class="form-label" for="formTitle">Form Title *</label>
-                                <input type="text" id="formTitle" class="form-input" placeholder="Enter form title" required>
+                                <label class="form-label" for="formTitle">Titre du formulaire *</label>
+                                <input type="text" id="formTitle" class="form-input" placeholder="Entrez le titre du formulaire" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="formDescription">Description</label>
-                                <textarea id="formDescription" class="form-textarea" rows="2" placeholder="Optional description"></textarea>
+                                <textarea id="formDescription" class="form-textarea" rows="2" placeholder="Description optionnelle"></textarea>
                             </div>
                         </div>
                     </div>
 
                     <!-- Fields Canvas -->
-                    <h3 class="mb-2">Form Fields</h3>
+                    <h3 class="mb-2">Champs du formulaire</h3>
                     <div class="fields-canvas" id="fieldsCanvas">
                         <div class="fields-empty" id="fieldsEmpty">
                             <div class="fields-empty-icon">📋</div>
-                            <h3>No fields yet</h3>
-                            <p>Click on a field type from the sidebar to add it to your form</p>
+                            <h3>Aucun champ</h3>
+                            <p>Cliquez sur un type de champ dans la barre latérale pour l'ajouter à votre formulaire</p>
                         </div>
                         <div id="fieldsList"></div>
                     </div>
 
                     <!-- Builder Actions -->
                     <div class="builder-actions">
-                        <button class="btn btn-secondary" id="saveBtn">Save Draft</button>
-                        <button class="btn btn-success" id="savePublishBtn">Save & Publish</button>
-                        <a href="dashboard.html" class="btn btn-outline">Cancel</a>
+                        <button class="btn btn-secondary" id="saveBtn">Enregistrer le brouillon</button>
+                        <button class="btn btn-success" id="savePublishBtn">Enregistrer et publier</button>
+                        <a href="dashboard.html" class="btn btn-outline">Annuler</a>
                     </div>
                 </main>
             </div>
@@ -90,6 +90,20 @@
     <script>
         let currentImageUploadTarget = null;
 
+        // Field type labels in French
+        const fieldTypeLabels = {
+            text: 'Texte',
+            email: 'Email',
+            number: 'Nombre',
+            date: 'Date',
+            long_text: 'Texte long',
+            multiple_choice: 'Choix multiple',
+            checkbox: 'Cases à cocher',
+            dropdown: 'Liste déroulante',
+            file: 'Téléversement',
+            rating: 'Évaluation'
+        };
+
         // Initialize
         async function init() {
             // Check auth
@@ -103,8 +117,8 @@
                 await FormBuilder.init(formId);
 
                 if (formId) {
-                    document.getElementById('pageTitle').textContent = 'Edit Form';
-                    document.title = 'Edit Form - Admin';
+                    document.getElementById('pageTitle').textContent = 'Modifier le formulaire';
+                    document.title = 'Modifier le formulaire - Admin';
                 }
 
                 renderFieldTypes();
@@ -112,7 +126,7 @@
                 renderFields();
             } catch (err) {
                 console.error('Error initializing builder:', err);
-                Utils.showToast('Error loading form', 'error');
+                Utils.showToast('Erreur lors du chargement du formulaire', 'error');
             }
         }
 
@@ -122,7 +136,7 @@
             container.innerHTML = Object.entries(FormBuilder.fieldTypes).map(([type, info]) => `
                 <button class="field-type-btn" data-type="${type}">
                     <span class="icon">${info.icon}</span>
-                    <span>${info.label}</span>
+                    <span>${fieldTypeLabels[type] || info.label}</span>
                 </button>
             `).join('');
 
@@ -165,6 +179,7 @@
         function renderFieldCard(field, index) {
             const typeInfo = FormBuilder.fieldTypes[field.field_type];
             const fieldId = field.tempId || field.id;
+            const typeLabel = fieldTypeLabels[field.field_type] || typeInfo.label;
 
             let settingsHtml = '';
             let choicesHtml = '';
@@ -173,14 +188,14 @@
             if (field.field_type === 'rating') {
                 settingsHtml = `
                     <div class="field-settings">
-                        <h4 class="field-settings-title">Rating Settings</h4>
+                        <h4 class="field-settings-title">Paramètres d'évaluation</h4>
                         <div class="settings-row">
                             <div class="form-group">
-                                <label class="form-label">Min Value</label>
+                                <label class="form-label">Valeur minimum</label>
                                 <input type="number" class="form-input setting-input" data-field="${fieldId}" data-setting="min" value="${field.settings?.min || 1}">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Max Value</label>
+                                <label class="form-label">Valeur maximum</label>
                                 <input type="number" class="form-input setting-input" data-field="${fieldId}" data-setting="max" value="${field.settings?.max || 5}">
                             </div>
                         </div>
@@ -189,14 +204,14 @@
             } else if (field.field_type === 'number') {
                 settingsHtml = `
                     <div class="field-settings">
-                        <h4 class="field-settings-title">Number Settings</h4>
+                        <h4 class="field-settings-title">Paramètres du nombre</h4>
                         <div class="settings-row">
                             <div class="form-group">
-                                <label class="form-label">Min Value (optional)</label>
+                                <label class="form-label">Valeur min (optionnel)</label>
                                 <input type="number" class="form-input setting-input" data-field="${fieldId}" data-setting="min" value="${field.settings?.min ?? ''}">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Max Value (optional)</label>
+                                <label class="form-label">Valeur max (optionnel)</label>
                                 <input type="number" class="form-input setting-input" data-field="${fieldId}" data-setting="max" value="${field.settings?.max ?? ''}">
                             </div>
                         </div>
@@ -205,14 +220,14 @@
             } else if (field.field_type === 'long_text') {
                 settingsHtml = `
                     <div class="field-settings">
-                        <h4 class="field-settings-title">Text Area Settings</h4>
+                        <h4 class="field-settings-title">Paramètres de la zone de texte</h4>
                         <div class="settings-row">
                             <div class="form-group">
-                                <label class="form-label">Rows</label>
+                                <label class="form-label">Lignes</label>
                                 <input type="number" class="form-input setting-input" data-field="${fieldId}" data-setting="rows" value="${field.settings?.rows || 4}" min="2" max="20">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Max Length (optional)</label>
+                                <label class="form-label">Longueur max (optionnel)</label>
                                 <input type="number" class="form-input setting-input" data-field="${fieldId}" data-setting="maxLength" value="${field.settings?.maxLength ?? ''}">
                             </div>
                         </div>
@@ -221,12 +236,12 @@
             } else if (field.field_type === 'file') {
                 settingsHtml = `
                     <div class="field-settings">
-                        <h4 class="field-settings-title">File Settings</h4>
+                        <h4 class="field-settings-title">Paramètres du fichier</h4>
                         <div class="form-group">
-                            <label class="form-label">Accepted File Types</label>
+                            <label class="form-label">Types de fichiers acceptés</label>
                             <input type="text" class="form-input setting-input" data-field="${fieldId}" data-setting="accept"
-                                   value="${field.settings?.accept || ''}" placeholder="e.g., .pdf,.doc,.docx or image/*">
-                            <p class="form-hint">Leave empty for all file types</p>
+                                   value="${field.settings?.accept || ''}" placeholder="ex: .pdf,.doc,.docx ou image/*">
+                            <p class="form-hint">Laissez vide pour tous les types de fichiers</p>
                         </div>
                     </div>
                 `;
@@ -238,7 +253,7 @@
 
                 choicesHtml = `
                     <div class="choices-editor">
-                        <h4 class="choices-editor-title">Options${isMultipleChoice ? ' (with optional images)' : ''}</h4>
+                        <h4 class="choices-editor-title">Options${isMultipleChoice ? ' (avec images optionnelles)' : ''}</h4>
                         ${field.choices.map((choice, cIndex) => {
                             const choiceId = choice.tempId || choice.id;
                             return `
@@ -247,23 +262,23 @@
                                     <div class="choice-content">
                                         <input type="text" class="form-input choice-input choice-label-input"
                                                data-field="${fieldId}" data-choice="${choiceId}"
-                                               value="${Utils.escapeHtml(choice.label)}" placeholder="Option label">
+                                               value="${Utils.escapeHtml(choice.label)}" placeholder="Libellé de l'option">
                                         ${isMultipleChoice ? `
                                             <div class="choice-image-section">
                                                 <div class="choice-image-preview">
                                                     ${choice.image_url
-                                                        ? `<img src="${choice.image_url}" alt="Preview">`
+                                                        ? `<img src="${choice.image_url}" alt="Aperçu">`
                                                         : '<span class="placeholder">🖼️</span>'}
                                                 </div>
                                                 <div class="choice-image-actions">
                                                     <button type="button" class="btn btn-sm btn-outline upload-image-btn"
                                                             data-field="${fieldId}" data-choice="${choiceId}">
-                                                        ${choice.image_url ? 'Change' : 'Add Image'}
+                                                        ${choice.image_url ? 'Changer' : 'Ajouter image'}
                                                     </button>
                                                     ${choice.image_url ? `
                                                         <button type="button" class="btn btn-sm btn-danger remove-image-btn"
                                                                 data-field="${fieldId}" data-choice="${choiceId}">
-                                                            Remove
+                                                            Supprimer
                                                         </button>
                                                     ` : ''}
                                                 </div>
@@ -272,14 +287,14 @@
                                     </div>
                                     <button type="button" class="choice-delete-btn delete-choice-btn"
                                             data-field="${fieldId}" data-choice="${choiceId}"
-                                            ${field.choices.length <= 2 ? 'disabled title="Minimum 2 options required"' : ''}>
+                                            ${field.choices.length <= 2 ? 'disabled title="Minimum 2 options requises"' : ''}>
                                         🗑️
                                     </button>
                                 </div>
                             `;
                         }).join('')}
                         <button type="button" class="add-choice-btn" data-field="${fieldId}">
-                            + Add Option
+                            + Ajouter une option
                         </button>
                     </div>
                 `;
@@ -291,7 +306,7 @@
                         <span class="field-drag-handle">⋮⋮</span>
                         <span class="field-type-badge">
                             <span>${typeInfo.icon}</span>
-                            <span>${typeInfo.label}</span>
+                            <span>${typeLabel}</span>
                         </span>
                         <span class="field-card-title">${Utils.escapeHtml(field.label)}</span>
                         <div class="field-card-actions">
@@ -303,24 +318,24 @@
                     <div class="field-card-body">
                         <div class="field-config-row">
                             <div class="form-group">
-                                <label class="form-label">Field Label *</label>
+                                <label class="form-label">Libellé du champ *</label>
                                 <input type="text" class="form-input field-label-input" data-field="${fieldId}" value="${Utils.escapeHtml(field.label)}">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Field Code</label>
+                                <label class="form-label">Code du champ</label>
                                 <input type="text" class="form-input" value="${field.code}" readonly>
                             </div>
                         </div>
                         <div class="field-config-row single">
                             <div class="form-group">
-                                <label class="form-label">Description (optional)</label>
+                                <label class="form-label">Description (optionnel)</label>
                                 <input type="text" class="form-input field-description-input" data-field="${fieldId}"
-                                       value="${Utils.escapeHtml(field.description || '')}" placeholder="Helper text for this field">
+                                       value="${Utils.escapeHtml(field.description || '')}" placeholder="Texte d'aide pour ce champ">
                             </div>
                         </div>
                         <div class="form-check">
                             <input type="checkbox" id="required_${fieldId}" class="field-required-input" data-field="${fieldId}" ${field.is_required ? 'checked' : ''}>
-                            <label for="required_${fieldId}">Required field</label>
+                            <label for="required_${fieldId}">Champ obligatoire</label>
                         </div>
                         ${settingsHtml}
                         ${choicesHtml}
@@ -338,7 +353,7 @@
                     FormBuilder.updateField(fieldId, { label: e.target.value });
                     // Update title in header
                     const card = e.target.closest('.field-card');
-                    card.querySelector('.field-card-title').textContent = e.target.value || 'Untitled';
+                    card.querySelector('.field-card-title').textContent = e.target.value || 'Sans titre';
                 });
             });
 
@@ -395,7 +410,7 @@
             document.querySelectorAll('.delete-field-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const fieldId = e.target.dataset.field;
-                    if (confirm('Delete this field?')) {
+                    if (confirm('Supprimer ce champ ?')) {
                         FormBuilder.deleteField(fieldId);
                         renderFields();
                     }
@@ -487,10 +502,10 @@
                 // Update choice with new image URL
                 FormBuilder.updateChoice(fieldId, choiceId, { image_url: imageUrl });
                 renderFields();
-                Utils.showToast('Image uploaded', 'success');
+                Utils.showToast('Image téléversée', 'success');
             } catch (err) {
                 console.error('Upload error:', err);
-                Utils.showToast(err.message || 'Failed to upload image', 'error');
+                Utils.showToast(err.message || 'Échec du téléversement de l\'image', 'error');
             } finally {
                 if (btn) {
                     Utils.setButtonLoading(btn, false);
@@ -516,16 +531,16 @@
 
             try {
                 const formId = await FormBuilder.save();
-                Utils.showToast('Form saved as draft', 'success');
+                Utils.showToast('Formulaire enregistré comme brouillon', 'success');
 
                 // Update URL if new form
                 if (!Utils.getUrlParam('id')) {
                     history.replaceState(null, '', `builder.html?id=${formId}`);
-                    document.getElementById('pageTitle').textContent = 'Edit Form';
+                    document.getElementById('pageTitle').textContent = 'Modifier le formulaire';
                 }
             } catch (err) {
                 console.error('Save error:', err);
-                Utils.showToast(err.message || 'Failed to save form', 'error');
+                Utils.showToast(err.message || 'Échec de l\'enregistrement', 'error');
             } finally {
                 Utils.setButtonLoading(btn, false);
             }
@@ -541,7 +556,7 @@
 
             try {
                 const formId = await FormBuilder.save();
-                Utils.showToast('Form saved and published!', 'success');
+                Utils.showToast('Formulaire enregistré et publié !', 'success');
 
                 // Redirect to dashboard
                 setTimeout(() => {
@@ -549,7 +564,7 @@
                 }, 1000);
             } catch (err) {
                 console.error('Save error:', err);
-                Utils.showToast(err.message || 'Failed to save form', 'error');
+                Utils.showToast(err.message || 'Échec de l\'enregistrement', 'error');
                 Utils.setButtonLoading(btn, false);
             }
         });

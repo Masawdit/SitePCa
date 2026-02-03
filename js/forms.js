@@ -222,7 +222,7 @@ const FieldRenderers = {
                         name="${field.code}"
                         class="form-select"
                         ${field.is_required ? 'required' : ''}>
-                    <option value="">-- Select an option --</option>
+                    <option value="">-- Sélectionner une option --</option>
                     ${optionsHtml}
                 </select>
             </div>

@@ -208,28 +208,28 @@ const FormBuilder = {
         const errors = [];
 
         if (!this.currentForm.title || !this.currentForm.title.trim()) {
-            errors.push('Form title is required');
+            errors.push('Le titre du formulaire est requis');
         }
 
         if (this.fields.length === 0) {
-            errors.push('Form must have at least one field');
+            errors.push('Le formulaire doit avoir au moins un champ');
         }
 
         // Check each field
         this.fields.forEach((field, index) => {
             if (!field.label || !field.label.trim()) {
-                errors.push(`Field ${index + 1}: Label is required`);
+                errors.push(`Champ ${index + 1} : Le libellé est requis`);
             }
 
             // Check choices for choice-based fields
             const typeInfo = this.fieldTypes[field.field_type];
             if (typeInfo && typeInfo.hasChoices) {
                 if (!field.choices || field.choices.length < 2) {
-                    errors.push(`Field "${field.label}": Must have at least 2 options`);
+                    errors.push(`Champ "${field.label}" : Doit avoir au moins 2 options`);
                 } else {
                     field.choices.forEach((choice, cIndex) => {
                         if (!choice.label || !choice.label.trim()) {
-                            errors.push(`Field "${field.label}", Option ${cIndex + 1}: Label is required`);
+                            errors.push(`Champ "${field.label}", Option ${cIndex + 1} : Le libellé est requis`);
                         }
                     });
                 }
@@ -242,7 +242,7 @@ const FormBuilder = {
     // Save form to database
     async save() {
         const user = await Auth.getUser();
-        if (!user) throw new Error('Not authenticated');
+        if (!user) throw new Error('Non authentifié');
 
         // Validate
         const errors = this.validate();

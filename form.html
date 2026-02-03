@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form - Form Builder</title>
+    <title>Formulaire - Créateur de Formulaires</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/forms.css">
 </head>
@@ -11,9 +11,9 @@
     <!-- Header -->
     <header class="header">
         <div class="container">
-            <a href="index.html" class="header-logo">Form Builder</a>
+            <a href="index.html" class="header-logo">Créateur de Formulaires</a>
             <nav class="header-nav">
-                <a href="index.html">All Forms</a>
+                <a href="index.html">Tous les formulaires</a>
             </nav>
         </div>
     </header>
@@ -24,15 +24,15 @@
             <!-- Loading state -->
             <div id="loadingState" class="text-center">
                 <div class="spinner" style="margin: 2rem auto;"></div>
-                <p class="text-muted">Loading form...</p>
+                <p class="text-muted">Chargement du formulaire...</p>
             </div>
 
             <!-- Error state -->
             <div id="errorState" class="card empty-state" style="display: none;">
                 <div class="empty-state-icon">❌</div>
-                <h3>Form not found</h3>
-                <p class="text-muted">This form doesn't exist or is no longer available.</p>
-                <a href="index.html" class="btn btn-primary mt-2">View All Forms</a>
+                <h3>Formulaire introuvable</h3>
+                <p class="text-muted">Ce formulaire n'existe pas ou n'est plus disponible.</p>
+                <a href="index.html" class="btn btn-primary mt-2">Voir tous les formulaires</a>
             </div>
 
             <!-- Form content -->
@@ -46,7 +46,7 @@
                     <div id="fieldsContainer"></div>
 
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">Submit</button>
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">Soumettre</button>
                     </div>
                 </form>
             </div>
@@ -54,17 +54,17 @@
             <!-- Success state -->
             <div id="successState" class="card form-success" style="display: none;">
                 <div class="form-success-icon">✅</div>
-                <h2>Thank you!</h2>
-                <p>Your response has been recorded.</p>
+                <h2>Merci !</h2>
+                <p>Votre réponse a été enregistrée.</p>
 
-                <h3 class="mt-3 mb-2">Export your response</h3>
+                <h3 class="mt-3 mb-2">Exporter votre réponse</h3>
                 <div class="export-options">
-                    <button class="btn btn-primary" id="downloadCsvBtn">Download CSV</button>
-                    <button class="btn btn-secondary" id="emailCsvBtn">Send via Email</button>
+                    <button class="btn btn-primary" id="downloadCsvBtn">Télécharger CSV</button>
+                    <button class="btn btn-secondary" id="emailCsvBtn">Envoyer par Email</button>
                 </div>
 
                 <div class="mt-3">
-                    <a href="index.html" class="btn btn-outline">Back to Forms</a>
+                    <a href="index.html" class="btn btn-outline">Retour aux formulaires</a>
                 </div>
             </div>
         </div>
@@ -103,7 +103,7 @@
                 currentForm = form;
                 currentFields = fields;
 
-                document.title = `${form.title} - Form Builder`;
+                document.title = `${form.title} - Créateur de Formulaires`;
                 renderForm();
             } catch (err) {
                 console.error('Error loading form:', err);
@@ -139,7 +139,7 @@
                     const imageUrl = this.dataset.image;
 
                     if (imageUrl) {
-                        preview.innerHTML = `<img src="${imageUrl}" alt="Selected option preview">`;
+                        preview.innerHTML = `<img src="${imageUrl}" alt="Aperçu de l'option sélectionnée">`;
                         preview.classList.add('active');
                     } else {
                         preview.innerHTML = '';
@@ -199,7 +199,7 @@
 
             } catch (err) {
                 console.error('Error submitting form:', err);
-                Utils.showToast('Error submitting form. Please try again.', 'error');
+                Utils.showToast('Erreur lors de la soumission. Veuillez réessayer.', 'error');
             } finally {
                 Utils.setButtonLoading(submitBtn, false);
             }
@@ -209,7 +209,7 @@
         document.getElementById('downloadCsvBtn').addEventListener('click', () => {
             if (submittedData) {
                 const csv = Export.generateCSV(submittedData, currentFields);
-                Export.downloadCSV(csv, `${currentForm.title.replace(/[^a-z0-9]/gi, '_')}_response.csv`);
+                Export.downloadCSV(csv, `${currentForm.title.replace(/[^a-z0-9]/gi, '_')}_reponse.csv`);
             }
         });
 

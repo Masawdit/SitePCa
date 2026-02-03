@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invite Admin - Form Builder</title>
+    <title>Inviter un Admin - Créateur de Formulaires</title>
     <link rel="stylesheet" href="../css/main.css">
     <style>
         .invite-container {
@@ -56,10 +56,10 @@
     <!-- Header -->
     <header class="header">
         <div class="container">
-            <a href="dashboard.html" class="header-logo">Form Builder</a>
+            <a href="dashboard.html" class="header-logo">Créateur de Formulaires</a>
             <nav class="header-nav">
-                <a href="dashboard.html">Dashboard</a>
-                <a href="#" id="logoutBtn">Logout</a>
+                <a href="dashboard.html">Tableau de bord</a>
+                <a href="#" id="logoutBtn">Déconnexion</a>
             </nav>
         </div>
     </header>
@@ -67,43 +67,43 @@
     <!-- Main Content -->
     <div class="page-wrapper">
         <div class="container invite-container">
-            <h1 class="mb-3">Invite Admin</h1>
+            <h1 class="mb-3">Inviter un Admin</h1>
 
             <!-- Create Invite Form -->
             <div class="card">
-                <h3 class="card-title">Send Invitation</h3>
-                <p class="text-muted mb-2">Enter the email address of the person you want to invite as an admin.</p>
+                <h3 class="card-title">Envoyer une invitation</h3>
+                <p class="text-muted mb-2">Entrez l'adresse email de la personne que vous souhaitez inviter comme admin.</p>
 
                 <form id="inviteForm">
                     <div class="form-group">
-                        <label class="form-label" for="inviteEmail">Email Address</label>
-                        <input type="email" id="inviteEmail" class="form-input" required placeholder="colleague@example.com">
+                        <label class="form-label" for="inviteEmail">Adresse Email</label>
+                        <input type="email" id="inviteEmail" class="form-input" required placeholder="collegue@exemple.com">
                     </div>
-                    <button type="submit" class="btn btn-primary" id="inviteBtn">Generate Invite Link</button>
+                    <button type="submit" class="btn btn-primary" id="inviteBtn">Générer le lien d'invitation</button>
                 </form>
 
                 <!-- Generated Link -->
                 <div id="inviteLinkSection" style="display: none;">
                     <hr class="mt-3 mb-3">
-                    <h4>Invitation Link Generated!</h4>
-                    <p class="text-muted">Share this link with the invitee. It expires in 7 days.</p>
+                    <h4>Lien d'invitation généré !</h4>
+                    <p class="text-muted">Partagez ce lien avec l'invité. Il expire dans 7 jours.</p>
                     <div class="invite-link-box">
                         <input type="text" id="inviteLinkInput" class="form-input invite-link-input" readonly>
-                        <button type="button" class="btn btn-secondary" id="copyLinkBtn">Copy</button>
+                        <button type="button" class="btn btn-secondary" id="copyLinkBtn">Copier</button>
                     </div>
                 </div>
             </div>
 
             <!-- Pending Invites -->
             <div class="card mt-3">
-                <h3 class="card-title">Your Invitations</h3>
+                <h3 class="card-title">Vos invitations</h3>
 
                 <div id="loadingState" class="text-center">
                     <div class="spinner" style="margin: 1rem auto;"></div>
                 </div>
 
                 <div id="emptyState" class="empty-state" style="display: none; padding: 2rem;">
-                    <p class="text-muted">No invitations sent yet</p>
+                    <p class="text-muted">Aucune invitation envoyée</p>
                 </div>
 
                 <div id="invitesList"></div>
@@ -159,13 +159,13 @@
                         let statusClass = '';
 
                         if (isUsed) {
-                            status = 'Accepted';
+                            status = 'Acceptée';
                             statusClass = 'badge-success';
                         } else if (isExpired) {
-                            status = 'Expired';
+                            status = 'Expirée';
                             statusClass = 'badge-secondary';
                         } else {
-                            status = 'Pending';
+                            status = 'En attente';
                             statusClass = 'badge-warning';
                         }
 
@@ -174,8 +174,8 @@
                                 <div class="invite-item-info">
                                     <div class="invite-email">${Utils.escapeHtml(invite.email)}</div>
                                     <div class="invite-meta">
-                                        Sent ${Utils.formatDate(invite.created_at)}
-                                        ${!isUsed && !isExpired ? ` · Expires ${Utils.formatDate(invite.expires_at)}` : ''}
+                                        Envoyée le ${Utils.formatDate(invite.created_at)}
+                                        ${!isUsed && !isExpired ? ` · Expire le ${Utils.formatDate(invite.expires_at)}` : ''}
                                     </div>
                                 </div>
                                 <div class="invite-status">
@@ -187,7 +187,7 @@
                 }
             } catch (err) {
                 console.error('Error loading invites:', err);
-                loadingState.innerHTML = '<p class="text-danger">Error loading invites</p>';
+                loadingState.innerHTML = '<p class="text-danger">Erreur lors du chargement des invitations</p>';
             }
         }
 
@@ -220,10 +220,10 @@
                 // Reload invites list
                 await loadInvites();
 
-                Utils.showToast('Invitation created!', 'success');
+                Utils.showToast('Invitation créée !', 'success');
             } catch (err) {
                 console.error('Invite error:', err);
-                Utils.showToast(err.message || 'Failed to create invitation', 'error');
+                Utils.showToast(err.message || 'Échec de la création de l\'invitation', 'error');
             } finally {
                 Utils.setButtonLoading(inviteBtn, false);
             }
@@ -235,7 +235,7 @@
             input.select();
             document.execCommand('copy');
 
-            Utils.showToast('Link copied to clipboard!', 'success');
+            Utils.showToast('Lien copié dans le presse-papier !', 'success');
         });
 
         // Logout
