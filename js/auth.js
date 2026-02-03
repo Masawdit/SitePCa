@@ -12,7 +12,9 @@ const Auth = {
         const user = await this.getUser();
 
         if (!user) {
-            window.location.href = 'login.html';
+            const currentPath = window.location.pathname;
+            const loginPath = currentPath.includes('/admin/') ? '../login.html' : 'login.html';
+            window.location.href = loginPath;
             return null;
         }
 
@@ -25,7 +27,6 @@ const Auth = {
 
         if (error || !admin) {
             await this.logout();
-            window.location.href = 'login.html?error=not_admin';
             return null;
         }
 
@@ -118,7 +119,10 @@ const Auth = {
     // Logout
     async logout() {
         await db.auth.signOut();
-        window.location.href = 'login.html';
+        // Get the correct path to login.html (handle both root and admin subfolder)
+        const currentPath = window.location.pathname;
+        const loginPath = currentPath.includes('/admin/') ? '../login.html' : 'login.html';
+        window.location.href = loginPath;
     },
 
     // Check invite token validity
