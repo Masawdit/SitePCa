@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir /s \"c:\\\\Users\\\\aleca\\\\Documents\\\\Test-code\\\\SitePC\")"
+      "Bash(dir /s \"c:\\\\Users\\\\aleca\\\\Documents\\\\Test-code\\\\SitePC\")",
+      "Bash(echo.:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git remote get-url:*)"
     ]
   }
 }
