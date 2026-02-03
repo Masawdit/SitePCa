@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invite Admin - Form Builder</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        .invite-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .invite-link-box {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .invite-link-input {
+            flex: 1;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+
+        .invite-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--bg-color);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.75rem;
+        }
+
+        .invite-item-info {
+            flex: 1;
+        }
+
+        .invite-email {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .invite-meta {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .invite-status {
+            margin-left: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <a href="dashboard.html" class="header-logo">Form Builder</a>
+            <nav class="header-nav">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="#" id="logoutBtn">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="page-wrapper">
+        <div class="container invite-container">
+            <h1 class="mb-3">Invite Admin</h1>
+
+            <!-- Create Invite Form -->
+            <div class="card">
+                <h3 class="card-title">Send Invitation</h3>
+                <p class="text-muted mb-2">Enter the email address of the person you want to invite as an admin.</p>
+
+                <form id="inviteForm">
+                    <div class="form-group">
+                        <label class="form-label" for="inviteEmail">Email Address</label>
+                        <input type="email" id="inviteEmail" class="form-input" required placeholder="colleague@example.com">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="inviteBtn">Generate Invite Link</button>
+                </form>
+
+                <!-- Generated Link -->
+                <div id="inviteLinkSection" style="display: none;">
+                    <hr class="mt-3 mb-3">
+                    <h4>Invitation Link Generated!</h4>
+                    <p class="text-muted">Share this link with the invitee. It expires in 7 days.</p>
+                    <div class="invite-link-box">
+                        <input type="text" id="inviteLinkInput" class="form-input invite-link-input" readonly>
+                        <button type="button" class="btn btn-secondary" id="copyLinkBtn">Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Invites -->
+            <div class="card mt-3">
+                <h3 class="card-title">Your Invitations</h3>
+
+                <div id="loadingState" class="text-center">
+                    <div class="spinner" style="margin: 1rem auto;"></div>
+                </div>
+
+                <div id="emptyState" class="empty-state" style="display: none; padding: 2rem;">
+                    <p class="text-muted">No invitations sent yet</p>
+                </div>
+
+                <div id="invitesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.js"></script>
+
+    <script>
+        let currentAdmin = null;
+
+        // Initialize
+        async function init() {
+            currentAdmin = await Auth.requireAdmin();
+            if (!currentAdmin) return;
+
+            await loadInvites();
+        }
+
+        // Load invites
+        async function loadInvites() {
+            const loadingState = document.getElementById('loadingState');
+            const emptyState = document.getElementById('emptyState');
+            const invitesList = document.getElementById('invitesList');
+
+            try {
+                const { data: invites, error } = await db
+                    .from('admin_invites')
+                    .select('*')
+                    .eq('invited_by', currentAdmin.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                loadingState.style.display = 'none';
+
+                if (!invites || invites.length === 0) {
+                    emptyState.style.display = 'block';
+                    invitesList.innerHTML = '';
+                } else {
+                    emptyState.style.display = 'none';
+                    invitesList.innerHTML = invites.map(invite => {
+                        const isExpired = new Date(invite.expires_at) < new Date();
+                        const isUsed = invite.used_at !== null;
+
+                        let status = '';
+                        let statusClass = '';
+
+                        if (isUsed) {
+                            status = 'Accepted';
+                            statusClass = 'badge-success';
+                        } else if (isExpired) {
+                            status = 'Expired';
+                            statusClass = 'badge-secondary';
+                        } else {
+                            status = 'Pending';
+                            statusClass = 'badge-warning';
+                        }
+
+                        return `
+                            <div class="invite-item">
+                                <div class="invite-item-info">
+                                    <div class="invite-email">${Utils.escapeHtml(invite.email)}</div>
+                                    <div class="invite-meta">
+                                        Sent ${Utils.formatDate(invite.created_at)}
+                                        ${!isUsed && !isExpired ? ` · Expires ${Utils.formatDate(invite.expires_at)}` : ''}
+                                    </div>
+                                </div>
+                                <div class="invite-status">
+                                    <span class="badge ${statusClass}">${status}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (err) {
+                console.error('Error loading invites:', err);
+                loadingState.innerHTML = '<p class="text-danger">Error loading invites</p>';
+            }
+        }
+
+        // Generate invite link URL
+        function getInviteUrl(token) {
+            const baseUrl = window.location.origin + window.location.pathname.replace('/admin/invite.html', '');
+            return `${baseUrl}/login.html?invite=${token}`;
+        }
+
+        // Submit invite form
+        document.getElementById('inviteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('inviteEmail').value;
+            const inviteBtn = document.getElementById('inviteBtn');
+
+            Utils.setButtonLoading(inviteBtn, true);
+
+            try {
+                const invite = await Auth.createInvite(email);
+                const inviteUrl = getInviteUrl(invite.token);
+
+                // Show the link
+                document.getElementById('inviteLinkInput').value = inviteUrl;
+                document.getElementById('inviteLinkSection').style.display = 'block';
+
+                // Clear form
+                document.getElementById('inviteEmail').value = '';
+
+                // Reload invites list
+                await loadInvites();
+
+                Utils.showToast('Invitation created!', 'success');
+            } catch (err) {
+                console.error('Invite error:', err);
+                Utils.showToast(err.message || 'Failed to create invitation', 'error');
+            } finally {
+                Utils.setButtonLoading(inviteBtn, false);
+            }
+        });
+
+        // Copy link button
+        document.getElementById('copyLinkBtn').addEventListener('click', () => {
+            const input = document.getElementById('inviteLinkInput');
+            input.select();
+            document.execCommand('copy');
+
+            Utils.showToast('Link copied to clipboard!', 'success');
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            Auth.logout();
+        });
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

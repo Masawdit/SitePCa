@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Form Builder</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        .form-card {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .form-card-content {
+            flex: 1;
+        }
+
+        .form-card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .form-card-code {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-card-meta {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .form-card-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .admin-name {
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <a href="../index.html" class="header-logo">Form Builder</a>
+            <nav class="header-nav">
+                <span class="admin-name" id="adminName">Admin</span>
+                <a href="invite.html">Invite Admin</a>
+                <a href="#" id="logoutBtn">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="page-wrapper">
+        <div class="container">
+            <h1 class="mb-3">Dashboard</h1>
+
+            <!-- Stats -->
+            <div class="dashboard-stats" id="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalForms">-</div>
+                    <div class="stat-label">Total Forms</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="publishedForms">-</div>
+                    <div class="stat-label">Published</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalResponses">-</div>
+                    <div class="stat-label">Responses</div>
+                </div>
+            </div>
+
+            <!-- Forms Section -->
+            <div class="section-header">
+                <h2 class="section-title">Your Forms</h2>
+                <a href="builder.html" class="btn btn-primary">+ Create Form</a>
+            </div>
+
+            <!-- Loading state -->
+            <div id="loadingState" class="card text-center">
+                <div class="spinner" style="margin: 0 auto;"></div>
+                <p class="mt-2 text-muted">Loading forms...</p>
+            </div>
+
+            <!-- Empty state -->
+            <div id="emptyState" class="card empty-state" style="display: none;">
+                <div class="empty-state-icon">📝</div>
+                <h3>No forms yet</h3>
+                <p class="text-muted">Create your first form to get started</p>
+                <a href="builder.html" class="btn btn-primary mt-2">Create Form</a>
+            </div>
+
+            <!-- Forms list -->
+            <div id="formsList"></div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Delete Form</h3>
+                <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete "<strong id="deleteFormTitle"></strong>"?</p>
+                <p class="text-muted">This action cannot be undone. All fields and responses will be permanently deleted.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.js"></script>
+
+    <script>
+        let currentAdmin = null;
+        let forms = [];
+        let formToDelete = null;
+
+        // Initialize
+        async function init() {
+            // Check auth
+            currentAdmin = await Auth.requireAdmin();
+            if (!currentAdmin) return;
+
+            // Display admin name
+            document.getElementById('adminName').textContent = currentAdmin.display_name || currentAdmin.email;
+
+            // Load data
+            await loadForms();
+            await loadStats();
+        }
+
+        // Load forms
+        async function loadForms() {
+            const loadingState = document.getElementById('loadingState');
+            const emptyState = document.getElementById('emptyState');
+            const formsList = document.getElementById('formsList');
+
+            try {
+                const { data, error } = await db
+                    .from('forms')
+                    .select('*')
+                    .eq('created_by', currentAdmin.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                forms = data || [];
+                loadingState.style.display = 'none';
+
+                if (forms.length === 0) {
+                    emptyState.style.display = 'block';
+                    formsList.innerHTML = '';
+                } else {
+                    emptyState.style.display = 'none';
+                    renderForms();
+                }
+            } catch (err) {
+                console.error('Error loading forms:', err);
+                loadingState.innerHTML = '<p class="text-danger">Error loading forms</p>';
+            }
+        }
+
+        // Render forms list
+        function renderForms() {
+            const formsList = document.getElementById('formsList');
+
+            formsList.innerHTML = forms.map(form => `
+                <div class="card form-card">
+                    <div class="form-card-content">
+                        <h3 class="form-card-title">${Utils.escapeHtml(form.title)}</h3>
+                        <div class="form-card-code">${form.code}</div>
+                        <div class="form-card-meta">
+                            <span class="badge ${form.is_published ? 'badge-success' : 'badge-secondary'}">
+                                ${form.is_published ? 'Published' : 'Draft'}
+                            </span>
+                            <span style="margin-left: 0.5rem;">Created ${Utils.formatDate(form.created_at)}</span>
+                        </div>
+                    </div>
+                    <div class="form-card-actions">
+                        ${form.is_published ? `
+                            <a href="../form.html?id=${form.id}" class="btn btn-sm btn-outline" target="_blank">View</a>
+                        ` : ''}
+                        <a href="builder.html?id=${form.id}" class="btn btn-sm btn-secondary">Edit</a>
+                        <button class="btn btn-sm btn-${form.is_published ? 'warning' : 'success'}"
+                                onclick="togglePublish('${form.id}', ${form.is_published})">
+                            ${form.is_published ? 'Unpublish' : 'Publish'}
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="showDeleteModal('${form.id}', '${Utils.escapeHtml(form.title).replace(/'/g, "\\'")}')">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                // Count forms
+                const { count: totalCount } = await db
+                    .from('forms')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('created_by', currentAdmin.id);
+
+                const { count: publishedCount } = await db
+                    .from('forms')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('created_by', currentAdmin.id)
+                    .eq('is_published', true);
+
+                // Count responses to user's forms
+                const { data: userForms } = await db
+                    .from('forms')
+                    .select('id')
+                    .eq('created_by', currentAdmin.id);
+
+                let responsesCount = 0;
+                if (userForms && userForms.length > 0) {
+                    const formIds = userForms.map(f => f.id);
+                    const { count } = await db
+                        .from('responses')
+                        .select('*', { count: 'exact', head: true })
+                        .in('form_id', formIds);
+                    responsesCount = count || 0;
+                }
+
+                document.getElementById('totalForms').textContent = totalCount || 0;
+                document.getElementById('publishedForms').textContent = publishedCount || 0;
+                document.getElementById('totalResponses').textContent = responsesCount;
+            } catch (err) {
+                console.error('Error loading stats:', err);
+            }
+        }
+
+        // Toggle publish status
+        async function togglePublish(formId, currentStatus) {
+            try {
+                const { error } = await db
+                    .from('forms')
+                    .update({ is_published: !currentStatus, updated_at: new Date().toISOString() })
+                    .eq('id', formId);
+
+                if (error) throw error;
+
+                Utils.showToast(currentStatus ? 'Form unpublished' : 'Form published!', 'success');
+                await loadForms();
+                await loadStats();
+            } catch (err) {
+                console.error('Error toggling publish:', err);
+                Utils.showToast('Error updating form', 'error');
+            }
+        }
+
+        // Delete modal functions
+        function showDeleteModal(formId, formTitle) {
+            formToDelete = formId;
+            document.getElementById('deleteFormTitle').textContent = formTitle;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            formToDelete = null;
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+
+        // Confirm delete
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+            if (!formToDelete) return;
+
+            const btn = document.getElementById('confirmDeleteBtn');
+            Utils.setButtonLoading(btn, true);
+
+            try {
+                const { error } = await db
+                    .from('forms')
+                    .delete()
+                    .eq('id', formToDelete);
+
+                if (error) throw error;
+
+                closeDeleteModal();
+                Utils.showToast('Form deleted', 'success');
+                await loadForms();
+                await loadStats();
+            } catch (err) {
+                console.error('Error deleting form:', err);
+                Utils.showToast('Error deleting form', 'error');
+            } finally {
+                Utils.setButtonLoading(btn, false);
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            Auth.logout();
+        });
+
+        // Close modal on outside click
+        document.getElementById('deleteModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                closeDeleteModal();
+            }
+        });
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

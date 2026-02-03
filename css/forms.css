@@ -1,0 +1,328 @@
+/* Forms Display Styles */
+
+/* Form Container */
+.form-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.form-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.form-description {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+/* Form Fields */
+.form-field {
+    margin-bottom: 1.75rem;
+    padding: 1.25rem;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+.field-label {
+    display: block;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.field-label .required {
+    color: var(--danger-color);
+}
+
+.field-description {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+/* Choice Options (Radio & Checkbox) */
+.choices-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.choice-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-color);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.choice-option:hover {
+    border-color: var(--primary-color);
+    background: rgba(74, 108, 247, 0.05);
+}
+
+.choice-option input[type="radio"],
+.choice-option input[type="checkbox"] {
+    display: none;
+}
+
+/* Custom Radio */
+.choice-radio {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.choice-option input[type="radio"]:checked + .choice-radio {
+    border-color: var(--primary-color);
+}
+
+.choice-option input[type="radio"]:checked + .choice-radio::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background: var(--primary-color);
+    border-radius: 50%;
+}
+
+/* Custom Checkbox */
+.choice-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.choice-option input[type="checkbox"]:checked + .choice-checkbox {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+}
+
+.choice-option input[type="checkbox"]:checked + .choice-checkbox::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 6px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.choice-label {
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+/* Selected state for choice options */
+.choice-option:has(input:checked) {
+    border-color: var(--primary-color);
+    background: rgba(74, 108, 247, 0.08);
+}
+
+/* Image Preview for Multiple Choice */
+.selected-image-preview {
+    margin-top: 1rem;
+    display: none;
+}
+
+.selected-image-preview.active {
+    display: block;
+}
+
+.selected-image-preview img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    object-fit: contain;
+}
+
+/* Indicator for choices with images */
+.choice-option.has-image .choice-label::after {
+    content: ' 🖼️';
+    font-size: 0.875rem;
+}
+
+/* Rating Field */
+.rating-container {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.rating-option {
+    cursor: pointer;
+}
+
+.rating-option input {
+    display: none;
+}
+
+.rating-star {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: var(--bg-color);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.rating-option:hover .rating-star {
+    border-color: var(--primary-color);
+    background: rgba(74, 108, 247, 0.05);
+}
+
+.rating-option input:checked + .rating-star {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+/* File Input */
+.form-file {
+    padding: 0.5rem;
+}
+
+.form-file::file-selector-button {
+    padding: 0.5rem 1rem;
+    margin-right: 1rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.form-file::file-selector-button:hover {
+    background: var(--primary-hover);
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.form-actions .btn {
+    flex: 1;
+}
+
+/* Export Options */
+.export-options {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* Form Success State */
+.form-success {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.form-success-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.form-success h2 {
+    margin-bottom: 0.5rem;
+}
+
+.form-success p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+/* Forms List (Homepage) */
+.forms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.form-card-public {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-card-public:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.form-card-public h3 {
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+}
+
+.form-card-public p {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    flex: 1;
+    margin-bottom: 1rem;
+}
+
+.form-card-public .btn {
+    align-self: flex-start;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .form-field {
+        padding: 1rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .export-options {
+        flex-direction: column;
+    }
+
+    .rating-star {
+        width: 38px;
+        height: 38px;
+    }
+}

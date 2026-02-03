@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Builder - Admin</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/builder.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <a href="dashboard.html" class="header-logo">Form Builder</a>
+            <nav class="header-nav">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="#" id="logoutBtn">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="page-wrapper">
+        <div class="container">
+            <div class="flex-between mb-3">
+                <h1 id="pageTitle">Create New Form</h1>
+                <div class="flex gap-1">
+                    <span class="badge badge-secondary" id="formCode"></span>
+                </div>
+            </div>
+
+            <div class="builder-layout">
+                <!-- Sidebar - Field Types -->
+                <aside class="builder-sidebar">
+                    <h3 class="sidebar-title">Add Field</h3>
+                    <div id="fieldTypesList"></div>
+                </aside>
+
+                <!-- Main Builder Area -->
+                <main class="builder-main">
+                    <!-- Form Settings -->
+                    <div class="form-settings">
+                        <h3 class="mb-2">Form Settings</h3>
+                        <div class="form-settings-grid">
+                            <div class="form-group">
+                                <label class="form-label" for="formTitle">Form Title *</label>
+                                <input type="text" id="formTitle" class="form-input" placeholder="Enter form title" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="formDescription">Description</label>
+                                <textarea id="formDescription" class="form-textarea" rows="2" placeholder="Optional description"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fields Canvas -->
+                    <h3 class="mb-2">Form Fields</h3>
+                    <div class="fields-canvas" id="fieldsCanvas">
+                        <div class="fields-empty" id="fieldsEmpty">
+                            <div class="fields-empty-icon">📋</div>
+                            <h3>No fields yet</h3>
+                            <p>Click on a field type from the sidebar to add it to your form</p>
+                        </div>
+                        <div id="fieldsList"></div>
+                    </div>
+
+                    <!-- Builder Actions -->
+                    <div class="builder-actions">
+                        <button class="btn btn-secondary" id="saveBtn">Save Draft</button>
+                        <button class="btn btn-success" id="savePublishBtn">Save & Publish</button>
+                        <a href="dashboard.html" class="btn btn-outline">Cancel</a>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for image uploads -->
+    <input type="file" id="imageUploadInput" accept="image/*" style="display: none;">
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/storage.js"></script>
+    <script src="../js/builder.js"></script>
+
+    <script>
+        let currentImageUploadTarget = null;
+
+        // Initialize
+        async function init() {
+            // Check auth
+            const admin = await Auth.requireAdmin();
+            if (!admin) return;
+
+            // Get form ID from URL
+            const formId = Utils.getUrlParam('id');
+
+            try {
+                await FormBuilder.init(formId);
+
+                if (formId) {
+                    document.getElementById('pageTitle').textContent = 'Edit Form';
+                    document.title = 'Edit Form - Admin';
+                }
+
+                renderFieldTypes();
+                renderFormSettings();
+                renderFields();
+            } catch (err) {
+                console.error('Error initializing builder:', err);
+                Utils.showToast('Error loading form', 'error');
+            }
+        }
+
+        // Render field type buttons in sidebar
+        function renderFieldTypes() {
+            const container = document.getElementById('fieldTypesList');
+            container.innerHTML = Object.entries(FormBuilder.fieldTypes).map(([type, info]) => `
+                <button class="field-type-btn" data-type="${type}">
+                    <span class="icon">${info.icon}</span>
+                    <span>${info.label}</span>
+                </button>
+            `).join('');
+
+            // Add click handlers
+            container.querySelectorAll('.field-type-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const type = btn.dataset.type;
+                    FormBuilder.addField(type);
+                    renderFields();
+                });
+            });
+        }
+
+        // Render form settings
+        function renderFormSettings() {
+            document.getElementById('formTitle').value = FormBuilder.currentForm.title || '';
+            document.getElementById('formDescription').value = FormBuilder.currentForm.description || '';
+            document.getElementById('formCode').textContent = FormBuilder.currentForm.code;
+        }
+
+        // Render all fields
+        function renderFields() {
+            const canvas = document.getElementById('fieldsCanvas');
+            const emptyState = document.getElementById('fieldsEmpty');
+            const fieldsList = document.getElementById('fieldsList');
+
+            if (FormBuilder.fields.length === 0) {
+                canvas.classList.remove('has-fields');
+                emptyState.style.display = 'flex';
+                fieldsList.innerHTML = '';
+            } else {
+                canvas.classList.add('has-fields');
+                emptyState.style.display = 'none';
+                fieldsList.innerHTML = FormBuilder.fields.map((field, index) => renderFieldCard(field, index)).join('');
+                attachFieldHandlers();
+            }
+        }
+
+        // Render single field card
+        function renderFieldCard(field, index) {
+            const typeInfo = FormBuilder.fieldTypes[field.field_type];
+            const fieldId = field.tempId || field.id;
+
+            let settingsHtml = '';
+            let choicesHtml = '';
+
+            // Field-specific settings
+            if (field.field_type === 'rating') {
+                settingsHtml = `
+                    <div class="field-settings">
+                        <h4 class="field-settings-title">Rating Settings</h4>
+                        <div class="settings-row">
+                            <div class="form-group">
+                                <label class="form-label">Min Value</label>
+                                <input type="number" class="form-input setting-input" data-field="${fieldId}" data-setting="min" value="${field.settings?.min || 1}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Max Value</label>
+                                <input type="number" class="form-input setting-input" data-field="${fieldId}" data-setting="max" value="${field.settings?.max || 5}">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (field.field_type === 'number') {
+                settingsHtml = `
+                    <div class="field-settings">
+                        <h4 class="field-settings-title">Number Settings</h4>
+                        <div class="settings-row">
+                            <div class="form-group">
+                                <label class="form-label">Min Value (optional)</label>
+                                <input type="number" class="form-input setting-input" data-field="${fieldId}" data-setting="min" value="${field.settings?.min ?? ''}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Max Value (optional)</label>
+                                <input type="number" class="form-input setting-input" data-field="${fieldId}" data-setting="max" value="${field.settings?.max ?? ''}">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (field.field_type === 'long_text') {
+                settingsHtml = `
+                    <div class="field-settings">
+                        <h4 class="field-settings-title">Text Area Settings</h4>
+                        <div class="settings-row">
+                            <div class="form-group">
+                                <label class="form-label">Rows</label>
+                                <input type="number" class="form-input setting-input" data-field="${fieldId}" data-setting="rows" value="${field.settings?.rows || 4}" min="2" max="20">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Max Length (optional)</label>
+                                <input type="number" class="form-input setting-input" data-field="${fieldId}" data-setting="maxLength" value="${field.settings?.maxLength ?? ''}">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (field.field_type === 'file') {
+                settingsHtml = `
+                    <div class="field-settings">
+                        <h4 class="field-settings-title">File Settings</h4>
+                        <div class="form-group">
+                            <label class="form-label">Accepted File Types</label>
+                            <input type="text" class="form-input setting-input" data-field="${fieldId}" data-setting="accept"
+                                   value="${field.settings?.accept || ''}" placeholder="e.g., .pdf,.doc,.docx or image/*">
+                            <p class="form-hint">Leave empty for all file types</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Choices editor for choice-based fields
+            if (typeInfo.hasChoices && field.choices) {
+                const isMultipleChoice = field.field_type === 'multiple_choice';
+
+                choicesHtml = `
+                    <div class="choices-editor">
+                        <h4 class="choices-editor-title">Options${isMultipleChoice ? ' (with optional images)' : ''}</h4>
+                        ${field.choices.map((choice, cIndex) => {
+                            const choiceId = choice.tempId || choice.id;
+                            return `
+                                <div class="choice-item" data-choice="${choiceId}">
+                                    <span class="choice-drag-handle">⋮⋮</span>
+                                    <div class="choice-content">
+                                        <input type="text" class="form-input choice-input choice-label-input"
+                                               data-field="${fieldId}" data-choice="${choiceId}"
+                                               value="${Utils.escapeHtml(choice.label)}" placeholder="Option label">
+                                        ${isMultipleChoice ? `
+                                            <div class="choice-image-section">
+                                                <div class="choice-image-preview">
+                                                    ${choice.image_url
+                                                        ? `<img src="${choice.image_url}" alt="Preview">`
+                                                        : '<span class="placeholder">🖼️</span>'}
+                                                </div>
+                                                <div class="choice-image-actions">
+                                                    <button type="button" class="btn btn-sm btn-outline upload-image-btn"
+                                                            data-field="${fieldId}" data-choice="${choiceId}">
+                                                        ${choice.image_url ? 'Change' : 'Add Image'}
+                                                    </button>
+                                                    ${choice.image_url ? `
+                                                        <button type="button" class="btn btn-sm btn-danger remove-image-btn"
+                                                                data-field="${fieldId}" data-choice="${choiceId}">
+                                                            Remove
+                                                        </button>
+                                                    ` : ''}
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    <button type="button" class="choice-delete-btn delete-choice-btn"
+                                            data-field="${fieldId}" data-choice="${choiceId}"
+                                            ${field.choices.length <= 2 ? 'disabled title="Minimum 2 options required"' : ''}>
+                                        🗑️
+                                    </button>
+                                </div>
+                            `;
+                        }).join('')}
+                        <button type="button" class="add-choice-btn" data-field="${fieldId}">
+                            + Add Option
+                        </button>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="field-card" data-field="${fieldId}" data-index="${index}">
+                    <div class="field-card-header">
+                        <span class="field-drag-handle">⋮⋮</span>
+                        <span class="field-type-badge">
+                            <span>${typeInfo.icon}</span>
+                            <span>${typeInfo.label}</span>
+                        </span>
+                        <span class="field-card-title">${Utils.escapeHtml(field.label)}</span>
+                        <div class="field-card-actions">
+                            <button type="button" class="field-action-btn move-up-btn" data-field="${fieldId}" ${index === 0 ? 'disabled' : ''}>↑</button>
+                            <button type="button" class="field-action-btn move-down-btn" data-field="${fieldId}" ${index === FormBuilder.fields.length - 1 ? 'disabled' : ''}>↓</button>
+                            <button type="button" class="field-action-btn delete delete-field-btn" data-field="${fieldId}">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="field-card-body">
+                        <div class="field-config-row">
+                            <div class="form-group">
+                                <label class="form-label">Field Label *</label>
+                                <input type="text" class="form-input field-label-input" data-field="${fieldId}" value="${Utils.escapeHtml(field.label)}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Field Code</label>
+                                <input type="text" class="form-input" value="${field.code}" readonly>
+                            </div>
+                        </div>
+                        <div class="field-config-row single">
+                            <div class="form-group">
+                                <label class="form-label">Description (optional)</label>
+                                <input type="text" class="form-input field-description-input" data-field="${fieldId}"
+                                       value="${Utils.escapeHtml(field.description || '')}" placeholder="Helper text for this field">
+                            </div>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" id="required_${fieldId}" class="field-required-input" data-field="${fieldId}" ${field.is_required ? 'checked' : ''}>
+                            <label for="required_${fieldId}">Required field</label>
+                        </div>
+                        ${settingsHtml}
+                        ${choicesHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Attach event handlers to field elements
+        function attachFieldHandlers() {
+            // Field label input
+            document.querySelectorAll('.field-label-input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const fieldId = e.target.dataset.field;
+                    FormBuilder.updateField(fieldId, { label: e.target.value });
+                    // Update title in header
+                    const card = e.target.closest('.field-card');
+                    card.querySelector('.field-card-title').textContent = e.target.value || 'Untitled';
+                });
+            });
+
+            // Field description input
+            document.querySelectorAll('.field-description-input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const fieldId = e.target.dataset.field;
+                    FormBuilder.updateField(fieldId, { description: e.target.value });
+                });
+            });
+
+            // Field required checkbox
+            document.querySelectorAll('.field-required-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const fieldId = e.target.dataset.field;
+                    FormBuilder.updateField(fieldId, { is_required: e.target.checked });
+                });
+            });
+
+            // Settings inputs
+            document.querySelectorAll('.setting-input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const fieldId = e.target.dataset.field;
+                    const settingKey = e.target.dataset.setting;
+                    const field = FormBuilder.fields.find(f => f.tempId === fieldId || f.id === fieldId);
+                    if (field) {
+                        const value = e.target.value === '' ? null : (e.target.type === 'number' ? parseInt(e.target.value) : e.target.value);
+                        field.settings = { ...field.settings, [settingKey]: value };
+                    }
+                });
+            });
+
+            // Move up button
+            document.querySelectorAll('.move-up-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const card = e.target.closest('.field-card');
+                    const index = parseInt(card.dataset.index);
+                    FormBuilder.moveField(index, index - 1);
+                    renderFields();
+                });
+            });
+
+            // Move down button
+            document.querySelectorAll('.move-down-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const card = e.target.closest('.field-card');
+                    const index = parseInt(card.dataset.index);
+                    FormBuilder.moveField(index, index + 1);
+                    renderFields();
+                });
+            });
+
+            // Delete field button
+            document.querySelectorAll('.delete-field-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const fieldId = e.target.dataset.field;
+                    if (confirm('Delete this field?')) {
+                        FormBuilder.deleteField(fieldId);
+                        renderFields();
+                    }
+                });
+            });
+
+            // Choice label input
+            document.querySelectorAll('.choice-label-input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const fieldId = e.target.dataset.field;
+                    const choiceId = e.target.dataset.choice;
+                    FormBuilder.updateChoice(fieldId, choiceId, { label: e.target.value });
+                });
+            });
+
+            // Add choice button
+            document.querySelectorAll('.add-choice-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const fieldId = e.target.dataset.field;
+                    FormBuilder.addChoice(fieldId);
+                    renderFields();
+                });
+            });
+
+            // Delete choice button
+            document.querySelectorAll('.delete-choice-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const fieldId = e.target.dataset.field;
+                    const choiceId = e.target.dataset.choice;
+                    FormBuilder.deleteChoice(fieldId, choiceId);
+                    renderFields();
+                });
+            });
+
+            // Upload image button
+            document.querySelectorAll('.upload-image-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const fieldId = e.target.dataset.field;
+                    const choiceId = e.target.dataset.choice;
+                    currentImageUploadTarget = { fieldId, choiceId };
+                    document.getElementById('imageUploadInput').click();
+                });
+            });
+
+            // Remove image button
+            document.querySelectorAll('.remove-image-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const fieldId = e.target.dataset.field;
+                    const choiceId = e.target.dataset.choice;
+
+                    const field = FormBuilder.fields.find(f => f.tempId === fieldId || f.id === fieldId);
+                    if (field && field.choices) {
+                        const choice = field.choices.find(c => c.tempId === choiceId || c.id === choiceId);
+                        if (choice && choice.image_url) {
+                            await Storage.deleteChoiceImage(choice.image_url);
+                            FormBuilder.updateChoice(fieldId, choiceId, { image_url: null });
+                            renderFields();
+                        }
+                    }
+                });
+            });
+        }
+
+        // Image upload handler
+        document.getElementById('imageUploadInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file || !currentImageUploadTarget) return;
+
+            const { fieldId, choiceId } = currentImageUploadTarget;
+            const field = FormBuilder.fields.find(f => f.tempId === fieldId || f.id === fieldId);
+
+            if (!field) return;
+
+            const btn = document.querySelector(`.upload-image-btn[data-field="${fieldId}"][data-choice="${choiceId}"]`);
+            if (btn) {
+                Utils.setButtonLoading(btn, true);
+            }
+
+            try {
+                // Upload image
+                const imageUrl = await Storage.uploadChoiceImage(file, field.code, choiceId);
+
+                // Delete old image if exists
+                const choice = field.choices.find(c => c.tempId === choiceId || c.id === choiceId);
+                if (choice && choice.image_url) {
+                    await Storage.deleteChoiceImage(choice.image_url);
+                }
+
+                // Update choice with new image URL
+                FormBuilder.updateChoice(fieldId, choiceId, { image_url: imageUrl });
+                renderFields();
+                Utils.showToast('Image uploaded', 'success');
+            } catch (err) {
+                console.error('Upload error:', err);
+                Utils.showToast(err.message || 'Failed to upload image', 'error');
+            } finally {
+                if (btn) {
+                    Utils.setButtonLoading(btn, false);
+                }
+                e.target.value = '';
+                currentImageUploadTarget = null;
+            }
+        });
+
+        // Update form settings from inputs
+        function updateFormFromInputs() {
+            FormBuilder.currentForm.title = document.getElementById('formTitle').value;
+            FormBuilder.currentForm.description = document.getElementById('formDescription').value;
+        }
+
+        // Save button
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            updateFormFromInputs();
+            FormBuilder.currentForm.is_published = false;
+
+            const btn = document.getElementById('saveBtn');
+            Utils.setButtonLoading(btn, true);
+
+            try {
+                const formId = await FormBuilder.save();
+                Utils.showToast('Form saved as draft', 'success');
+
+                // Update URL if new form
+                if (!Utils.getUrlParam('id')) {
+                    history.replaceState(null, '', `builder.html?id=${formId}`);
+                    document.getElementById('pageTitle').textContent = 'Edit Form';
+                }
+            } catch (err) {
+                console.error('Save error:', err);
+                Utils.showToast(err.message || 'Failed to save form', 'error');
+            } finally {
+                Utils.setButtonLoading(btn, false);
+            }
+        });
+
+        // Save & Publish button
+        document.getElementById('savePublishBtn').addEventListener('click', async () => {
+            updateFormFromInputs();
+            FormBuilder.currentForm.is_published = true;
+
+            const btn = document.getElementById('savePublishBtn');
+            Utils.setButtonLoading(btn, true);
+
+            try {
+                const formId = await FormBuilder.save();
+                Utils.showToast('Form saved and published!', 'success');
+
+                // Redirect to dashboard
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            } catch (err) {
+                console.error('Save error:', err);
+                Utils.showToast(err.message || 'Failed to save form', 'error');
+                Utils.setButtonLoading(btn, false);
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            Auth.logout();
+        });
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
