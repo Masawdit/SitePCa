@@ -239,6 +239,7 @@
                         ${form.is_published ? `
                             <a href="../form.html?id=${form.id}" class="btn btn-sm btn-outline" target="_blank">Voir</a>
                         ` : ''}
+                        <a href="responses.html?id=${form.id}" class="btn btn-sm btn-info">Réponses</a>
                         <a href="builder.html?id=${form.id}" class="btn btn-sm btn-secondary">Modifier</a>
                         <button class="btn btn-sm btn-${form.is_published ? 'warning' : 'success'}"
                                 onclick="togglePublish('${form.id}', ${form.is_published})">

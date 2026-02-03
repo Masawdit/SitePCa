@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réponses - Créateur de Formulaires</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header-info h1 {
+            margin-bottom: 0.25rem;
+        }
+
+        .page-header-info .form-code {
+            font-family: monospace;
+            color: var(--text-muted);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.25rem;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card-title {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        /* Field Statistics */
+        .field-stats {
+            margin-bottom: 2rem;
+        }
+
+        .field-stat-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .field-stat-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .field-stat-title .badge {
+            font-weight: normal;
+            font-size: 0.75rem;
+        }
+
+        .choice-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .choice-stat-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .choice-stat-label {
+            flex: 0 0 200px;
+            font-size: 0.875rem;
+        }
+
+        .choice-stat-bar-container {
+            flex: 1;
+            background: var(--bg-color);
+            border-radius: 4px;
+            height: 24px;
+            overflow: hidden;
+        }
+
+        .choice-stat-bar {
+            height: 100%;
+            background: var(--primary-color);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            min-width: 2px;
+        }
+
+        .choice-stat-count {
+            flex: 0 0 80px;
+            text-align: right;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Responses Table */
+        .responses-table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        .responses-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .responses-table th,
+        .responses-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .responses-table th {
+            background: var(--bg-color);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .responses-table tr:hover {
+            background: var(--bg-color);
+        }
+
+        .responses-table td {
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .response-date {
+            white-space: nowrap;
+            color: var(--text-muted);
+        }
+
+        .no-responses {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Rating display */
+        .rating-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .rating-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .rating-value {
+            width: 30px;
+            text-align: center;
+        }
+
+        .average-rating {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <a href="dashboard.html" class="header-logo">Créateur de Formulaires</a>
+            <nav class="header-nav">
+                <a href="dashboard.html">Tableau de bord</a>
+                <a href="#" id="logoutBtn">Déconnexion</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="page-wrapper">
+        <div class="container">
+            <!-- Loading -->
+            <div id="loadingState" class="card text-center">
+                <div class="spinner" style="margin: 0 auto;"></div>
+                <p class="mt-2 text-muted">Chargement des réponses...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="card text-center" style="display: none;">
+                <p class="text-danger">Formulaire non trouvé ou vous n'avez pas accès à ce formulaire.</p>
+                <a href="dashboard.html" class="btn btn-primary mt-2">Retour au tableau de bord</a>
+            </div>
+
+            <!-- Main Content (hidden until loaded) -->
+            <div id="mainContent" style="display: none;">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div class="page-header-info">
+                        <h1 id="formTitle">Réponses</h1>
+                        <div class="form-code" id="formCode"></div>
+                    </div>
+                    <div class="action-buttons">
+                        <a href="builder.html" id="editFormBtn" class="btn btn-secondary">Modifier le formulaire</a>
+                        <button class="btn btn-primary" id="downloadCsvBtn">Télécharger CSV</button>
+                    </div>
+                </div>
+
+                <!-- Stats Overview -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-title">Total des réponses</div>
+                        <div class="stat-card-value" id="totalResponses">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-title">Première réponse</div>
+                        <div class="stat-card-value" id="firstResponse" style="font-size: 1rem;">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-title">Dernière réponse</div>
+                        <div class="stat-card-value" id="lastResponse" style="font-size: 1rem;">-</div>
+                    </div>
+                </div>
+
+                <!-- Field Statistics -->
+                <div class="field-stats" id="fieldStats">
+                    <h2 class="section-title">Statistiques par champ</h2>
+                    <div id="fieldStatsContent"></div>
+                </div>
+
+                <!-- All Responses Table -->
+                <div class="card">
+                    <h2 class="section-title">Toutes les réponses</h2>
+                    <div class="responses-table-container">
+                        <table class="responses-table" id="responsesTable">
+                            <thead id="tableHead"></thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="noResponses" class="no-responses" style="display: none;">
+                        <p>Aucune réponse pour ce formulaire.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/export.js"></script>
+
+    <script>
+        let currentAdmin = null;
+        let form = null;
+        let fields = [];
+        let responses = [];
+
+        // Field type labels in French
+        const fieldTypeLabels = {
+            text: 'Texte',
+            email: 'Email',
+            number: 'Nombre',
+            date: 'Date',
+            long_text: 'Texte long',
+            multiple_choice: 'Choix multiple',
+            checkbox: 'Cases à cocher',
+            dropdown: 'Liste déroulante',
+            file: 'Fichier',
+            rating: 'Évaluation'
+        };
+
+        // Initialize
+        async function init() {
+            currentAdmin = await Auth.requireAdmin();
+            if (!currentAdmin) return;
+
+            const formId = Utils.getUrlParam('id');
+            if (!formId) {
+                showError();
+                return;
+            }
+
+            await loadFormData(formId);
+        }
+
+        // Load form, fields, and responses
+        async function loadFormData(formId) {
+            try {
+                // Load form
+                const { data: formData, error: formError } = await db
+                    .from('forms')
+                    .select('*')
+                    .eq('id', formId)
+                    .eq('created_by', currentAdmin.id)
+                    .single();
+
+                if (formError || !formData) {
+                    showError();
+                    return;
+                }
+
+                form = formData;
+
+                // Load fields with choices
+                const { data: fieldsData, error: fieldsError } = await db
+                    .from('fields')
+                    .select('*')
+                    .eq('form_id', formId)
+                    .order('position', { ascending: true });
+
+                if (fieldsError) throw fieldsError;
+
+                // Load choices for fields
+                const fieldIds = fieldsData.map(f => f.id);
+                let choices = [];
+                if (fieldIds.length > 0) {
+                    const { data: choicesData } = await db
+                        .from('choices')
+                        .select('*')
+                        .in('field_id', fieldIds)
+                        .order('position', { ascending: true });
+                    choices = choicesData || [];
+                }
+
+                // Attach choices to fields
+                fields = fieldsData.map(field => ({
+                    ...field,
+                    choices: choices.filter(c => c.field_id === field.id)
+                }));
+
+                // Load responses
+                const { data: responsesData, error: responsesError } = await db
+                    .from('responses')
+                    .select('*')
+                    .eq('form_id', formId)
+                    .order('submitted_at', { ascending: false });
+
+                if (responsesError) throw responsesError;
+
+                responses = responsesData || [];
+
+                // Render everything
+                renderPage();
+
+            } catch (err) {
+                console.error('Error loading data:', err);
+                showError();
+            }
+        }
+
+        function showError() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+        }
+
+        function renderPage() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+
+            // Header info
+            document.getElementById('formTitle').textContent = form.title;
+            document.getElementById('formCode').textContent = form.code;
+            document.getElementById('editFormBtn').href = `builder.html?id=${form.id}`;
+
+            // Stats
+            document.getElementById('totalResponses').textContent = responses.length;
+
+            if (responses.length > 0) {
+                const dates = responses.map(r => new Date(r.submitted_at));
+                const firstDate = new Date(Math.min(...dates));
+                const lastDate = new Date(Math.max(...dates));
+
+                document.getElementById('firstResponse').textContent = firstDate.toLocaleDateString('fr-FR');
+                document.getElementById('lastResponse').textContent = lastDate.toLocaleDateString('fr-FR');
+            }
+
+            // Field statistics
+            renderFieldStats();
+
+            // Responses table
+            renderResponsesTable();
+        }
+
+        function renderFieldStats() {
+            const container = document.getElementById('fieldStatsContent');
+
+            if (responses.length === 0) {
+                container.innerHTML = '<p class="text-muted">Aucune donnée statistique disponible.</p>';
+                return;
+            }
+
+            // Only show stats for choice-based and rating fields
+            const statsFields = fields.filter(f =>
+                ['multiple_choice', 'checkbox', 'dropdown', 'rating'].includes(f.field_type)
+            );
+
+            if (statsFields.length === 0) {
+                container.innerHTML = '<p class="text-muted">Aucun champ à choix dans ce formulaire.</p>';
+                return;
+            }
+
+            container.innerHTML = statsFields.map(field => {
+                if (field.field_type === 'rating') {
+                    return renderRatingStats(field);
+                } else {
+                    return renderChoiceStats(field);
+                }
+            }).join('');
+        }
+
+        function renderChoiceStats(field) {
+            // Count occurrences of each choice
+            const counts = {};
+            const choices = field.choices || [];
+
+            // Initialize counts
+            choices.forEach(c => {
+                counts[c.code] = 0;
+            });
+
+            // Count from responses
+            responses.forEach(response => {
+                const fieldResponse = response.response_data[field.code];
+                if (fieldResponse) {
+                    const value = fieldResponse.value;
+                    if (Array.isArray(value)) {
+                        // Checkbox - multiple values
+                        value.forEach(v => {
+                            if (counts[v] !== undefined) {
+                                counts[v]++;
+                            }
+                        });
+                    } else if (value && counts[value] !== undefined) {
+                        counts[value]++;
+                    }
+                }
+            });
+
+            // Find max for percentage calculation
+            const maxCount = Math.max(...Object.values(counts), 1);
+            const totalResponses = responses.length;
+
+            const choiceRows = choices.map(choice => {
+                const count = counts[choice.code] || 0;
+                const percentage = totalResponses > 0 ? Math.round((count / totalResponses) * 100) : 0;
+
+                return `
+                    <div class="choice-stat-row">
+                        <div class="choice-stat-label">${Utils.escapeHtml(choice.label)}</div>
+                        <div class="choice-stat-bar-container">
+                            <div class="choice-stat-bar" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="choice-stat-count">${count} (${percentage}%)</div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="field-stat-card">
+                    <div class="field-stat-title">
+                        ${Utils.escapeHtml(field.label)}
+                        <span class="badge badge-secondary">${fieldTypeLabels[field.field_type] || field.field_type}</span>
+                    </div>
+                    <div class="choice-stats">
+                        ${choiceRows}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRatingStats(field) {
+            const settings = field.settings || { min: 1, max: 5 };
+            const min = settings.min || 1;
+            const max = settings.max || 5;
+
+            // Count ratings
+            const counts = {};
+            for (let i = min; i <= max; i++) {
+                counts[i] = 0;
+            }
+
+            let sum = 0;
+            let ratingCount = 0;
+
+            responses.forEach(response => {
+                const fieldResponse = response.response_data[field.code];
+                if (fieldResponse && fieldResponse.value) {
+                    const value = parseInt(fieldResponse.value);
+                    if (!isNaN(value) && value >= min && value <= max) {
+                        counts[value]++;
+                        sum += value;
+                        ratingCount++;
+                    }
+                }
+            });
+
+            const average = ratingCount > 0 ? (sum / ratingCount).toFixed(1) : '-';
+            const maxCount = Math.max(...Object.values(counts), 1);
+
+            const ratingRows = [];
+            for (let i = max; i >= min; i--) {
+                const count = counts[i];
+                const percentage = responses.length > 0 ? Math.round((count / responses.length) * 100) : 0;
+
+                ratingRows.push(`
+                    <div class="choice-stat-row">
+                        <div class="choice-stat-label">${i} ${i === 1 ? 'étoile' : 'étoiles'}</div>
+                        <div class="choice-stat-bar-container">
+                            <div class="choice-stat-bar" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="choice-stat-count">${count} (${percentage}%)</div>
+                    </div>
+                `);
+            }
+
+            return `
+                <div class="field-stat-card">
+                    <div class="field-stat-title">
+                        ${Utils.escapeHtml(field.label)}
+                        <span class="badge badge-secondary">${fieldTypeLabels[field.field_type] || field.field_type}</span>
+                    </div>
+                    <div class="choice-stats">
+                        ${ratingRows.join('')}
+                    </div>
+                    <div class="average-rating">Moyenne : ${average} / ${max}</div>
+                </div>
+            `;
+        }
+
+        function renderResponsesTable() {
+            const tableHead = document.getElementById('tableHead');
+            const tableBody = document.getElementById('tableBody');
+            const noResponses = document.getElementById('noResponses');
+
+            if (responses.length === 0) {
+                document.getElementById('responsesTable').style.display = 'none';
+                noResponses.style.display = 'block';
+                return;
+            }
+
+            // Build header
+            const headers = ['Date', ...fields.map(f => Utils.escapeHtml(f.label))];
+            tableHead.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+
+            // Build rows
+            tableBody.innerHTML = responses.map(response => {
+                const cells = [
+                    `<td class="response-date">${new Date(response.submitted_at).toLocaleString('fr-FR')}</td>`
+                ];
+
+                fields.forEach(field => {
+                    const fieldResponse = response.response_data[field.code];
+                    let displayValue = '';
+
+                    if (fieldResponse) {
+                        let value = fieldResponse.value;
+
+                        // Format value based on field type
+                        if (Array.isArray(value)) {
+                            // Convert codes to labels for checkboxes
+                            if (field.choices && field.choices.length > 0) {
+                                value = value.map(code => {
+                                    const choice = field.choices.find(c => c.code === code);
+                                    return choice ? choice.label : code;
+                                });
+                            }
+                            displayValue = value.join(', ');
+                        } else if ((field.field_type === 'multiple_choice' || field.field_type === 'dropdown') && field.choices) {
+                            const choice = field.choices.find(c => c.code === value);
+                            displayValue = choice ? choice.label : value;
+                        } else {
+                            displayValue = value;
+                        }
+                    }
+
+                    cells.push(`<td title="${Utils.escapeHtml(String(displayValue))}">${Utils.escapeHtml(String(displayValue))}</td>`);
+                });
+
+                return `<tr>${cells.join('')}</tr>`;
+            }).join('');
+        }
+
+        // Download CSV
+        document.getElementById('downloadCsvBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('downloadCsvBtn');
+            Utils.setButtonLoading(btn, true);
+
+            try {
+                const csvContent = await Export.generateAllResponsesCSV(form.id, fields);
+
+                if (!csvContent) {
+                    Utils.showToast('Aucune réponse à exporter', 'warning');
+                    return;
+                }
+
+                Export.downloadCSV(csvContent, `${form.code}_reponses.csv`);
+                Utils.showToast('CSV téléchargé !', 'success');
+            } catch (err) {
+                console.error('Error downloading CSV:', err);
+                Utils.showToast('Erreur lors du téléchargement', 'error');
+            } finally {
+                Utils.setButtonLoading(btn, false);
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            Auth.logout();
+        });
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

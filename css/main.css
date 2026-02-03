@@ -193,6 +193,24 @@ p {
     background: #c82333;
 }
 
+.btn-warning {
+    background: var(--warning-color);
+    color: #212529;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background: #e0a800;
+}
+
+.btn-info {
+    background: var(--info-color);
+    color: white;
+}
+
+.btn-info:hover:not(:disabled) {
+    background: #138496;
+}
+
 .btn-outline {
     background: transparent;
     border: 2px solid var(--primary-color);
