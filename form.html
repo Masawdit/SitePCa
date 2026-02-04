@@ -62,7 +62,8 @@
 
                 <h3 class="mt-3 mb-2">Exporter votre réponse</h3>
                 <div class="export-options">
-                    <button class="btn btn-primary" id="downloadCsvBtn">Télécharger CSV</button>
+                    <button class="btn btn-primary" id="downloadPdfBtn">Télécharger PDF</button>
+                    <button class="btn btn-secondary" id="downloadCsvBtn">Télécharger CSV</button>
                     <button class="btn btn-secondary" id="emailCsvBtn">Envoyer par Email</button>
                 </div>
 
@@ -75,11 +76,14 @@
 
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/forms.js"></script>
     <script src="js/export.js"></script>
+    <script src="js/pdf-export.js"></script>
 
     <script>
         let currentForm = null;
@@ -209,6 +213,12 @@
         });
 
         // Export handlers
+        document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+            if (submittedData) {
+                PDFExport.downloadPDF(submittedData, currentFields, currentForm.title);
+            }
+        });
+
         document.getElementById('downloadCsvBtn').addEventListener('click', () => {
             if (submittedData) {
                 const csv = Export.generateCSV(submittedData, currentFields);
