@@ -53,7 +53,7 @@ const PDFExport = {
 
             // Field value
             doc.setFont('helvetica', 'normal');
-            let value = this.formatValue(response.value, field);
+            let value = this.formatValue(response.value, field, response.additionalInputs);
 
             // Handle long text with word wrap
             const lines = doc.splitTextToSize(value, contentWidth);
@@ -90,17 +90,24 @@ const PDFExport = {
     },
 
     // Format value based on field type
-    formatValue(value, field) {
+    formatValue(value, field, additionalInputs = null) {
         if (value === null || value === undefined) {
             return '';
         }
+
+        const extras = additionalInputs || {};
 
         // Handle arrays (checkboxes)
         if (Array.isArray(value)) {
             if (field.choices && field.choices.length > 0) {
                 return value.map(code => {
                     const choice = field.choices.find(c => c.code === code);
-                    return choice ? choice.label : code;
+                    let label = choice ? choice.label : code;
+                    // Append additional input if exists
+                    if (extras[code]) {
+                        label += `: ${extras[code]}`;
+                    }
+                    return label;
                 }).join(', ');
             }
             return value.join(', ');
@@ -110,7 +117,12 @@ const PDFExport = {
         if ((field.field_type === 'multiple_choice' || field.field_type === 'dropdown') && field.choices) {
             const choice = field.choices.find(c => c.code === value);
             if (choice) {
-                return choice.label;
+                let label = choice.label;
+                // Append additional input if exists
+                if (extras[value]) {
+                    label += `: ${extras[value]}`;
+                }
+                return label;
             }
         }
 

@@ -159,14 +159,22 @@ const FieldRenderers = {
 
     multiple_choice(field) {
         const choicesHtml = (field.choices || []).map(choice => `
-            <label class="choice-option ${choice.image_url ? 'has-image' : ''}" data-choice-code="${choice.code}">
+            <label class="choice-option ${choice.image_url ? 'has-image' : ''} ${choice.has_text_input ? 'has-text-input' : ''}" data-choice-code="${choice.code}">
                 <input type="radio"
                        name="${field.code}"
                        value="${choice.code}"
                        ${choice.image_url ? `data-image="${choice.image_url}"` : ''}
+                       ${choice.has_text_input ? `data-has-text-input="true" data-text-type="${choice.text_input_type || 'text'}"` : ''}
                        ${field.is_required ? 'required' : ''}>
                 <span class="choice-radio"></span>
                 <span class="choice-label">${Utils.escapeHtml(choice.label)}</span>
+                ${choice.has_text_input ? `
+                    <input type="${choice.text_input_type || 'text'}"
+                           class="form-input choice-additional-input"
+                           name="${field.code}_additional_${choice.code}"
+                           placeholder="${Utils.escapeHtml(choice.text_input_placeholder || 'Précisez')}"
+                           style="display: none;">
+                ` : ''}
             </label>
         `).join('');
 
@@ -184,13 +192,21 @@ const FieldRenderers = {
 
     checkbox(field) {
         const choicesHtml = (field.choices || []).map(choice => `
-            <label class="choice-option ${choice.image_url ? 'has-image' : ''}" data-choice-code="${choice.code}">
+            <label class="choice-option ${choice.image_url ? 'has-image' : ''} ${choice.has_text_input ? 'has-text-input' : ''}" data-choice-code="${choice.code}">
                 <input type="checkbox"
                        name="${field.code}"
                        value="${choice.code}"
-                       ${choice.image_url ? `data-image="${choice.image_url}"` : ''}>
+                       ${choice.image_url ? `data-image="${choice.image_url}"` : ''}
+                       ${choice.has_text_input ? `data-has-text-input="true" data-text-type="${choice.text_input_type || 'text'}"` : ''}>
                 <span class="choice-checkbox"></span>
                 <span class="choice-label">${Utils.escapeHtml(choice.label)}</span>
+                ${choice.has_text_input ? `
+                    <input type="${choice.text_input_type || 'text'}"
+                           class="form-input choice-additional-input"
+                           name="${field.code}_additional_${choice.code}"
+                           placeholder="${Utils.escapeHtml(choice.text_input_placeholder || 'Précisez')}"
+                           style="display: none;">
+                ` : ''}
             </label>
         `).join('');
 

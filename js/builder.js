@@ -98,8 +98,8 @@ const FormBuilder = {
         // Add default choices for choice-based fields
         if (typeInfo.hasChoices) {
             field.choices = [
-                { tempId: 'temp_c1', code: Utils.generateChoiceCode(), label: 'Option 1', image_url: null, position: 0 },
-                { tempId: 'temp_c2', code: Utils.generateChoiceCode(), label: 'Option 2', image_url: null, position: 1 }
+                { tempId: 'temp_c1', code: Utils.generateChoiceCode(), label: 'Option 1', image_url: null, position: 0, has_text_input: false, text_input_type: 'text', text_input_placeholder: '' },
+                { tempId: 'temp_c2', code: Utils.generateChoiceCode(), label: 'Option 2', image_url: null, position: 1, has_text_input: false, text_input_type: 'text', text_input_placeholder: '' }
             ];
         }
 
@@ -167,7 +167,10 @@ const FormBuilder = {
             code: Utils.generateChoiceCode(),
             label: `Option ${field.choices.length + 1}`,
             image_url: null,
-            position: field.choices.length
+            position: field.choices.length,
+            has_text_input: false,
+            text_input_type: 'text',
+            text_input_placeholder: ''
         };
 
         field.choices.push(choice);
@@ -318,7 +321,10 @@ const FormBuilder = {
                     field_id: savedField.id,
                     label: c.label.trim(),
                     image_url: c.image_url,
-                    position: c.position
+                    position: c.position,
+                    has_text_input: c.has_text_input || false,
+                    text_input_type: c.text_input_type || 'text',
+                    text_input_placeholder: c.text_input_placeholder || ''
                 }));
 
                 const { data: savedChoices, error: choicesError } = await db

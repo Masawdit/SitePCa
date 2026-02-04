@@ -13,6 +13,7 @@ const Export = {
             const response = responseData[field.code];
             if (response) {
                 let value = response.value;
+                const additionalInputs = response.additionalInputs || {};
 
                 // Handle arrays (checkboxes)
                 if (Array.isArray(value)) {
@@ -20,7 +21,12 @@ const Export = {
                     if (field.choices && field.choices.length > 0) {
                         value = value.map(code => {
                             const choice = field.choices.find(c => c.code === code);
-                            return choice ? choice.label : code;
+                            let label = choice ? choice.label : code;
+                            // Append additional input if exists
+                            if (additionalInputs[code]) {
+                                label += `: ${additionalInputs[code]}`;
+                            }
+                            return label;
                         }).join('; ');
                     } else {
                         value = value.join('; ');
@@ -31,6 +37,10 @@ const Export = {
                         const choice = field.choices.find(c => c.code === value);
                         if (choice) {
                             value = choice.label;
+                            // Append additional input if exists
+                            if (additionalInputs[value] || additionalInputs[response.value]) {
+                                value += `: ${additionalInputs[value] || additionalInputs[response.value]}`;
+                            }
                         }
                     }
                 }
@@ -178,13 +188,19 @@ const Export = {
 
                     if (fieldResponse) {
                         value = fieldResponse.value;
+                        const additionalInputs = fieldResponse.additionalInputs || {};
 
                         // Handle arrays
                         if (Array.isArray(value)) {
                             if (field.choices && field.choices.length > 0) {
                                 value = value.map(code => {
                                     const choice = field.choices.find(c => c.code === code);
-                                    return choice ? choice.label : code;
+                                    let label = choice ? choice.label : code;
+                                    // Append additional input if exists
+                                    if (additionalInputs[code]) {
+                                        label += `: ${additionalInputs[code]}`;
+                                    }
+                                    return label;
                                 }).join('; ');
                             } else {
                                 value = value.join('; ');
@@ -193,6 +209,10 @@ const Export = {
                             const choice = field.choices.find(c => c.code === value);
                             if (choice) {
                                 value = choice.label;
+                                // Append additional input if exists
+                                if (additionalInputs[fieldResponse.value]) {
+                                    value += `: ${additionalInputs[fieldResponse.value]}`;
+                                }
                             }
                         }
                     }

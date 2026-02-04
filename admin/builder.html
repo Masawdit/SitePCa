@@ -287,6 +287,25 @@
                                                 </div>
                                             </div>
                                         ` : ''}
+                                        <div class="choice-text-input-section">
+                                            <label class="choice-text-input-toggle">
+                                                <input type="checkbox" class="choice-has-text-input"
+                                                       data-field="${fieldId}" data-choice="${choiceId}"
+                                                       ${choice.has_text_input ? 'checked' : ''}>
+                                                <span>Saisie additionnelle</span>
+                                            </label>
+                                            <div class="choice-text-input-options" style="${choice.has_text_input ? '' : 'display: none;'}">
+                                                <select class="form-input form-input-sm choice-text-input-type"
+                                                        data-field="${fieldId}" data-choice="${choiceId}">
+                                                    <option value="text" ${choice.text_input_type === 'text' ? 'selected' : ''}>Texte</option>
+                                                    <option value="number" ${choice.text_input_type === 'number' ? 'selected' : ''}>Nombre</option>
+                                                </select>
+                                                <input type="text" class="form-input form-input-sm choice-text-input-placeholder"
+                                                       data-field="${fieldId}" data-choice="${choiceId}"
+                                                       value="${Utils.escapeHtml(choice.text_input_placeholder || '')}"
+                                                       placeholder="Placeholder (ex: Précisez)">
+                                            </div>
+                                        </div>
                                     </div>
                                     <button type="button" class="choice-delete-btn delete-choice-btn"
                                             data-field="${fieldId}" data-choice="${choiceId}"
@@ -473,6 +492,36 @@
                             renderFields();
                         }
                     }
+                });
+            });
+
+            // Toggle text input option
+            document.querySelectorAll('.choice-has-text-input').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    const fieldId = e.target.dataset.field;
+                    const choiceId = e.target.dataset.choice;
+                    FormBuilder.updateChoice(fieldId, choiceId, { has_text_input: e.target.checked });
+                    // Show/hide options
+                    const options = e.target.closest('.choice-text-input-section').querySelector('.choice-text-input-options');
+                    options.style.display = e.target.checked ? '' : 'none';
+                });
+            });
+
+            // Text input type change
+            document.querySelectorAll('.choice-text-input-type').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const fieldId = e.target.dataset.field;
+                    const choiceId = e.target.dataset.choice;
+                    FormBuilder.updateChoice(fieldId, choiceId, { text_input_type: e.target.value });
+                });
+            });
+
+            // Text input placeholder change
+            document.querySelectorAll('.choice-text-input-placeholder').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const fieldId = e.target.dataset.field;
+                    const choiceId = e.target.dataset.choice;
+                    FormBuilder.updateChoice(fieldId, choiceId, { text_input_placeholder: e.target.value });
                 });
             });
         }

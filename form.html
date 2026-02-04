@@ -137,15 +137,16 @@
             attachImagePreviewHandlers();
         }
 
-        // Handle image preview when selecting multiple choice options
+        // Handle image preview and text input visibility when selecting options
         function attachImagePreviewHandlers() {
-            // Multiple choice (radio buttons) - single image
+            // Multiple choice (radio buttons) - single image + text input
             document.querySelectorAll('.field-multiple-choice input[type="radio"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                     const field = this.closest('.form-field');
                     const preview = field.querySelector('.selected-image-preview');
                     const imageUrl = this.dataset.image;
 
+                    // Handle image preview
                     if (imageUrl) {
                         preview.innerHTML = `<img src="${imageUrl}" alt="Aperçu de l'option sélectionnée">`;
                         preview.classList.add('active');
@@ -153,10 +154,22 @@
                         preview.innerHTML = '';
                         preview.classList.remove('active');
                     }
+
+                    // Handle text input visibility - hide all, show selected if it has text input
+                    field.querySelectorAll('.choice-additional-input').forEach(input => {
+                        input.style.display = 'none';
+                        input.value = '';
+                    });
+                    if (this.dataset.hasTextInput) {
+                        const textInput = this.closest('.choice-option').querySelector('.choice-additional-input');
+                        if (textInput) {
+                            textInput.style.display = 'block';
+                        }
+                    }
                 });
             });
 
-            // Checkboxes - multiple images possible
+            // Checkboxes - multiple images possible + text inputs
             document.querySelectorAll('.field-checkbox input[type="checkbox"]').forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
                     const field = this.closest('.form-field');
@@ -173,6 +186,15 @@
                     } else {
                         preview.innerHTML = '';
                         preview.classList.remove('active');
+                    }
+
+                    // Handle text input visibility for this checkbox
+                    if (this.dataset.hasTextInput) {
+                        const textInput = this.closest('.choice-option').querySelector('.choice-additional-input');
+                        if (textInput) {
+                            textInput.style.display = this.checked ? 'block' : 'none';
+                            if (!this.checked) textInput.value = '';
+                        }
                     }
                 });
             });
@@ -194,9 +216,31 @@
                     if (field.field_type === 'checkbox') {
                         // Handle multiple checkboxes
                         const values = formData.getAll(field.code);
+                        // Collect additional inputs for choices that have them
+                        const additionalInputs = {};
+                        values.forEach(code => {
+                            const additionalKey = `${field.code}_additional_${code}`;
+                            const additionalValue = formData.get(additionalKey);
+                            if (additionalValue) {
+                                additionalInputs[code] = additionalValue;
+                            }
+                        });
                         responseData[field.code] = {
                             label: field.label,
                             value: values,
+                            additionalInputs: Object.keys(additionalInputs).length > 0 ? additionalInputs : null,
+                            type: field.field_type
+                        };
+                    } else if (field.field_type === 'multiple_choice') {
+                        // Handle multiple choice with potential additional input
+                        const value = formData.get(field.code) || '';
+                        // Collect additional input if exists
+                        const additionalKey = `${field.code}_additional_${value}`;
+                        const additionalValue = formData.get(additionalKey);
+                        responseData[field.code] = {
+                            label: field.label,
+                            value: value,
+                            additionalInputs: additionalValue ? { [value]: additionalValue } : null,
                             type: field.field_type
                         };
                     } else if (field.field_type === 'file') {

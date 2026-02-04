@@ -270,6 +270,55 @@
     gap: 0.25rem;
 }
 
+/* Choice text input settings */
+.choice-text-input-section {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--border-color);
+}
+
+.choice-text-input-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.choice-text-input-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.choice-text-input-toggle:hover {
+    color: var(--text-color);
+}
+
+.choice-text-input-options {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.choice-text-input-options .form-input-sm {
+    font-size: 0.8125rem;
+    padding: 0.375rem 0.5rem;
+    height: auto;
+}
+
+.choice-text-input-options select.form-input-sm {
+    width: auto;
+    min-width: 80px;
+}
+
+.choice-text-input-options input.form-input-sm {
+    flex: 1;
+    min-width: 120px;
+}
+
 .choice-delete-btn {
     width: 32px;
     height: 32px;
