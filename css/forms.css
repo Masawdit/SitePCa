@@ -487,6 +487,23 @@
     }
 }
 
+/* Nextcloud button */
+#sendToNextcloudBtn {
+    background: linear-gradient(135deg, #0082c9, #00639a);
+    color: white;
+    border: none;
+}
+
+#sendToNextcloudBtn:hover {
+    background: linear-gradient(135deg, #00639a, #004d7a);
+}
+
+#sendToNextcloudBtn:disabled {
+    background: var(--success-color);
+    cursor: default;
+    opacity: 1;
+}
+
 @keyframes riseIn {
     from {
         opacity: 0;

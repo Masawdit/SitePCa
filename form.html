@@ -65,6 +65,7 @@
                     <button class="btn btn-primary" id="downloadPdfBtn">Télécharger PDF</button>
                     <button class="btn btn-secondary" id="downloadCsvBtn">Télécharger CSV</button>
                     <button class="btn btn-secondary" id="emailCsvBtn">Envoyer par Email</button>
+                    <button class="btn btn-secondary" id="sendToNextcloudBtn" style="display: none;">Envoyer vers Nextcloud</button>
                 </div>
 
                 <div class="mt-3">
@@ -84,6 +85,7 @@
     <script src="js/forms.js"></script>
     <script src="js/export.js"></script>
     <script src="js/pdf-export.js"></script>
+    <script src="js/nextcloud.js"></script>
 
     <script>
         let currentForm = null;
@@ -270,6 +272,11 @@
                 document.getElementById('formContent').style.display = 'none';
                 document.getElementById('successState').style.display = 'block';
 
+                // Show Nextcloud button if enabled
+                if (currentForm.nextcloud_enabled) {
+                    document.getElementById('sendToNextcloudBtn').style.display = '';
+                }
+
             } catch (err) {
                 console.error('Error submitting form:', err);
                 Utils.showToast('Erreur lors de la soumission. Veuillez réessayer.', 'error');
@@ -296,6 +303,43 @@
             if (submittedData) {
                 const csv = Export.generateCSV(submittedData, currentFields);
                 Export.mailtoCSV(csv, currentForm.title);
+            }
+        });
+
+        // Nextcloud upload handler
+        document.getElementById('sendToNextcloudBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('sendToNextcloudBtn');
+            Utils.setButtonLoading(btn, true);
+
+            try {
+                // Generate PDF document
+                const pdfDoc = PDFExport.generatePDF(submittedData, currentFields, currentForm.title);
+
+                // Generate CSV content
+                const csvContent = Export.generateCSV(submittedData, currentFields);
+
+                // Upload both to Nextcloud
+                const timestamp = new Date().toLocaleString('fr-FR');
+                const results = await Nextcloud.uploadFormResponse(
+                    currentForm,
+                    pdfDoc,
+                    csvContent,
+                    currentForm.title,
+                    timestamp
+                );
+
+                if (results.errors.length > 0) {
+                    Utils.showToast(`Erreurs: ${results.errors.join(', ')}`, 'error');
+                } else {
+                    Utils.showToast('Fichiers envoyés vers Nextcloud !', 'success');
+                    btn.disabled = true;
+                    btn.textContent = '✓ Envoyé';
+                }
+            } catch (err) {
+                console.error('Nextcloud upload error:', err);
+                Utils.showToast('Erreur lors de l\'envoi vers Nextcloud', 'error');
+            } finally {
+                Utils.setButtonLoading(btn, false);
             }
         });
 

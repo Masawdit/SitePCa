@@ -54,6 +54,38 @@
                                 <textarea id="formDescription" class="form-textarea" rows="2" placeholder="Description optionnelle"></textarea>
                             </div>
                         </div>
+
+                        <!-- Nextcloud Integration Settings -->
+                        <div class="form-settings-section" id="nextcloudSettings">
+                            <h3 class="settings-section-title">
+                                <span>Intégration Nextcloud</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="nextcloudEnabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </h3>
+                            <div class="nextcloud-config" id="nextcloudConfig" style="display: none;">
+                                <div class="form-group">
+                                    <label class="form-label" for="nextcloudUrl">URL du serveur Nextcloud</label>
+                                    <input type="url" id="nextcloudUrl" class="form-input" placeholder="https://cloud.example.com">
+                                </div>
+                                <div class="form-settings-grid">
+                                    <div class="form-group">
+                                        <label class="form-label" for="nextcloudUsername">Nom d'utilisateur</label>
+                                        <input type="text" id="nextcloudUsername" class="form-input">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="nextcloudPassword">Mot de passe / Token d'app</label>
+                                        <input type="password" id="nextcloudPassword" class="form-input">
+                                        <p class="form-hint">Recommandé: utilisez un mot de passe d'application</p>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="nextcloudFolder">Dossier de destination</label>
+                                    <input type="text" id="nextcloudFolder" class="form-input" placeholder="/FormResponses" value="/FormResponses">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Fields Canvas -->
@@ -158,6 +190,15 @@
             document.getElementById('formTitle').value = FormBuilder.currentForm.title || '';
             document.getElementById('formDescription').value = FormBuilder.currentForm.description || '';
             document.getElementById('formCode').textContent = FormBuilder.currentForm.code;
+
+            // Load Nextcloud settings
+            const form = FormBuilder.currentForm;
+            document.getElementById('nextcloudEnabled').checked = form.nextcloud_enabled || false;
+            document.getElementById('nextcloudUrl').value = form.nextcloud_url || '';
+            document.getElementById('nextcloudUsername').value = form.nextcloud_username || '';
+            document.getElementById('nextcloudPassword').value = form.nextcloud_password || '';
+            document.getElementById('nextcloudFolder').value = form.nextcloud_folder || '/FormResponses';
+            document.getElementById('nextcloudConfig').style.display = form.nextcloud_enabled ? '' : 'none';
         }
 
         // Render all fields
@@ -571,6 +612,13 @@
         function updateFormFromInputs() {
             FormBuilder.currentForm.title = document.getElementById('formTitle').value;
             FormBuilder.currentForm.description = document.getElementById('formDescription').value;
+
+            // Nextcloud settings
+            FormBuilder.currentForm.nextcloud_enabled = document.getElementById('nextcloudEnabled').checked;
+            FormBuilder.currentForm.nextcloud_url = document.getElementById('nextcloudUrl').value.trim();
+            FormBuilder.currentForm.nextcloud_username = document.getElementById('nextcloudUsername').value.trim();
+            FormBuilder.currentForm.nextcloud_password = document.getElementById('nextcloudPassword').value;
+            FormBuilder.currentForm.nextcloud_folder = document.getElementById('nextcloudFolder').value.trim() || '/FormResponses';
         }
 
         // Save button
@@ -625,6 +673,11 @@
         document.getElementById('logoutBtn').addEventListener('click', (e) => {
             e.preventDefault();
             Auth.logout();
+        });
+
+        // Nextcloud toggle
+        document.getElementById('nextcloudEnabled').addEventListener('change', (e) => {
+            document.getElementById('nextcloudConfig').style.display = e.target.checked ? '' : 'none';
         });
 
         // Initialize
