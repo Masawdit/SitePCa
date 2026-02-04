@@ -57,19 +57,16 @@ const Forms = {
         return { form, fields: fieldsWithChoices };
     },
 
-    // Submit form response
+    // Submit form response using secure database function
     async submitResponse(formId, responseData) {
         const { data, error } = await db
-            .from('responses')
-            .insert({
-                form_id: formId,
-                response_data: responseData
-            })
-            .select()
-            .single();
+            .rpc('submit_form_response', {
+                p_form_id: formId,
+                p_response_data: responseData
+            });
 
         if (error) throw error;
-        return data;
+        return { id: data };
     }
 };
 
