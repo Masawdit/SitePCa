@@ -34,17 +34,46 @@ serve(async (req) => {
       bytes[i] = binaryString.charCodeAt(i)
     }
 
-    // Ensure folder path starts with /
-    const normalizedFolder = folderPath?.startsWith('/') ? folderPath : `/${folderPath || ''}`
+    // Clean up the Nextcloud URL - remove trailing slash and any /remote.php path if user included it
+    let baseUrl = nextcloudUrl.trim()
+      .replace(/\/+$/, '')  // Remove trailing slashes
+      .replace(/\/remote\.php\/dav\/files\/.*$/, '')  // Remove WebDAV path if included
+      .replace(/\/remote\.php.*$/, '')  // Remove any remote.php path
 
-    // Build WebDAV URL
-    const webdavUrl = `${nextcloudUrl.replace(/\/$/, '')}/remote.php/dav/files/${username}${normalizedFolder}/${fileName}`
+    // Normalize folder path
+    let normalizedFolder = (folderPath || '').trim()
+    if (!normalizedFolder || normalizedFolder === '/') {
+      normalizedFolder = ''
+    } else {
+      normalizedFolder = normalizedFolder.startsWith('/') ? normalizedFolder : `/${normalizedFolder}`
+      normalizedFolder = normalizedFolder.replace(/\/+$/, '')  // Remove trailing slash
+    }
+
+    // Build WebDAV base path
+    const webdavBase = `${baseUrl}/remote.php/dav/files/${username}`
+    const authHeader = 'Basic ' + btoa(`${username}:${password}`)
+
+    // Try to create the folder (MKCOL) - ignore errors if it already exists
+    if (normalizedFolder) {
+      const folderUrl = `${webdavBase}${normalizedFolder}`
+      try {
+        await fetch(folderUrl, {
+          method: 'MKCOL',
+          headers: { 'Authorization': authHeader }
+        })
+      } catch (e) {
+        // Ignore folder creation errors
+      }
+    }
+
+    // Build file URL
+    const fileUrl = `${webdavBase}${normalizedFolder}/${fileName}`
 
     // Upload via WebDAV PUT
-    const response = await fetch(webdavUrl, {
+    const response = await fetch(fileUrl, {
       method: 'PUT',
       headers: {
-        'Authorization': 'Basic ' + btoa(`${username}:${password}`),
+        'Authorization': authHeader,
         'Content-Type': contentType || 'application/octet-stream',
       },
       body: bytes
@@ -52,11 +81,19 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text()
-      throw new Error(`Nextcloud upload failed: ${response.status} ${response.statusText} - ${errorText}`)
+      // Provide cleaner error message
+      if (response.status === 401) {
+        throw new Error('Authentication failed - check username and password')
+      } else if (response.status === 404) {
+        throw new Error(`Folder not found. Please create "${normalizedFolder || '/'}" in your Nextcloud first, or check the URL: ${baseUrl}`)
+      } else if (response.status === 409) {
+        throw new Error(`Conflict - the folder path may not exist: ${normalizedFolder}`)
+      }
+      throw new Error(`Upload failed (${response.status}): ${errorText.substring(0, 200)}`)
     }
 
     return new Response(
-      JSON.stringify({ success: true, url: webdavUrl }),
+      JSON.stringify({ success: true, url: fileUrl }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
