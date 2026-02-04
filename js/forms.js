@@ -184,10 +184,11 @@ const FieldRenderers = {
 
     checkbox(field) {
         const choicesHtml = (field.choices || []).map(choice => `
-            <label class="choice-option" data-choice-code="${choice.code}">
+            <label class="choice-option ${choice.image_url ? 'has-image' : ''}" data-choice-code="${choice.code}">
                 <input type="checkbox"
                        name="${field.code}"
-                       value="${choice.code}">
+                       value="${choice.code}"
+                       ${choice.image_url ? `data-image="${choice.image_url}"` : ''}>
                 <span class="choice-checkbox"></span>
                 <span class="choice-label">${Utils.escapeHtml(choice.label)}</span>
             </label>
@@ -200,6 +201,7 @@ const FieldRenderers = {
                 </label>
                 ${field.description ? `<p class="field-description">${Utils.escapeHtml(field.description)}</p>` : ''}
                 <div class="choices-container">${choicesHtml}</div>
+                <div class="selected-image-preview"></div>
             </div>
         `;
     },

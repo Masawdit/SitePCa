@@ -228,6 +228,22 @@
     border: 1px solid var(--border-color);
 }
 
+/* Checkbox field - multiple images display */
+.field-checkbox .selected-image-preview {
+    display: none;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.field-checkbox .selected-image-preview.active {
+    display: flex;
+}
+
+.field-checkbox .selected-image-preview img {
+    max-width: calc(50% - 0.5rem);
+    max-height: 200px;
+}
+
 /* Indicator for choices with images */
 .choice-option.has-image .choice-label::after {
     content: ' 🖼️';

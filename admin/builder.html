@@ -252,11 +252,11 @@
 
             // Choices editor for choice-based fields
             if (typeInfo.hasChoices && field.choices) {
-                const isMultipleChoice = field.field_type === 'multiple_choice';
+                const supportsImages = field.field_type === 'multiple_choice' || field.field_type === 'checkbox';
 
                 choicesHtml = `
                     <div class="choices-editor">
-                        <h4 class="choices-editor-title">Options${isMultipleChoice ? ' (avec images optionnelles)' : ''}</h4>
+                        <h4 class="choices-editor-title">Options${supportsImages ? ' (avec images optionnelles)' : ''}</h4>
                         ${field.choices.map((choice, cIndex) => {
                             const choiceId = choice.tempId || choice.id;
                             return `
@@ -266,7 +266,7 @@
                                         <input type="text" class="form-input choice-input choice-label-input"
                                                data-field="${fieldId}" data-choice="${choiceId}"
                                                value="${Utils.escapeHtml(choice.label)}" placeholder="Libellé de l'option">
-                                        ${isMultipleChoice ? `
+                                        ${supportsImages ? `
                                             <div class="choice-image-section">
                                                 <div class="choice-image-preview">
                                                     ${choice.image_url

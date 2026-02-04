@@ -139,6 +139,7 @@
 
         // Handle image preview when selecting multiple choice options
         function attachImagePreviewHandlers() {
+            // Multiple choice (radio buttons) - single image
             document.querySelectorAll('.field-multiple-choice input[type="radio"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                     const field = this.closest('.form-field');
@@ -147,6 +148,27 @@
 
                     if (imageUrl) {
                         preview.innerHTML = `<img src="${imageUrl}" alt="Aperçu de l'option sélectionnée">`;
+                        preview.classList.add('active');
+                    } else {
+                        preview.innerHTML = '';
+                        preview.classList.remove('active');
+                    }
+                });
+            });
+
+            // Checkboxes - multiple images possible
+            document.querySelectorAll('.field-checkbox input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const field = this.closest('.form-field');
+                    const preview = field.querySelector('.selected-image-preview');
+
+                    // Collect all checked checkboxes with images
+                    const checkedWithImages = field.querySelectorAll('input[type="checkbox"]:checked[data-image]');
+
+                    if (checkedWithImages.length > 0) {
+                        preview.innerHTML = Array.from(checkedWithImages).map(cb =>
+                            `<img src="${cb.dataset.image}" alt="Aperçu de l'option sélectionnée">`
+                        ).join('');
                         preview.classList.add('active');
                     } else {
                         preview.innerHTML = '';
