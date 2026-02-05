@@ -29,12 +29,7 @@ const FormBuilder = {
                 code: Utils.generateFormCode(),
                 title: '',
                 description: '',
-                is_published: false,
-                nextcloud_enabled: false,
-                nextcloud_url: '',
-                nextcloud_username: '',
-                nextcloud_password: '',
-                nextcloud_folder: '/FormResponses'
+                is_published: false
             };
             this.fields = [];
             this.isEditing = false;
@@ -270,12 +265,7 @@ const FormBuilder = {
                     title: this.currentForm.title.trim(),
                     description: this.currentForm.description?.trim() || null,
                     is_published: this.currentForm.is_published,
-                    created_by: user.id,
-                    nextcloud_enabled: this.currentForm.nextcloud_enabled || false,
-                    nextcloud_url: this.currentForm.nextcloud_url || null,
-                    nextcloud_username: this.currentForm.nextcloud_username || null,
-                    nextcloud_password: this.currentForm.nextcloud_password || null,
-                    nextcloud_folder: this.currentForm.nextcloud_folder || '/FormResponses'
+                    created_by: user.id
                 })
                 .select()
                 .single();
@@ -291,12 +281,7 @@ const FormBuilder = {
                     title: this.currentForm.title.trim(),
                     description: this.currentForm.description?.trim() || null,
                     is_published: this.currentForm.is_published,
-                    updated_at: new Date().toISOString(),
-                    nextcloud_enabled: this.currentForm.nextcloud_enabled || false,
-                    nextcloud_url: this.currentForm.nextcloud_url || null,
-                    nextcloud_username: this.currentForm.nextcloud_username || null,
-                    nextcloud_password: this.currentForm.nextcloud_password || null,
-                    nextcloud_folder: this.currentForm.nextcloud_folder || '/FormResponses'
+                    updated_at: new Date().toISOString()
                 })
                 .eq('id', formId);
 

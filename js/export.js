@@ -129,31 +129,20 @@ const Export = {
         URL.revokeObjectURL(url);
     },
 
-    // Open mailto with CSV data
+    // Open mailto with CSV data in body
     mailtoCSV(csvContent, formTitle, recipientEmail = '') {
         const subject = encodeURIComponent(`Réponse au formulaire : ${formTitle}`);
 
-        // Convert CSV to readable text for email body
-        const lines = csvContent.split('\n');
         let bodyText = `Réponse au formulaire : ${formTitle}\n`;
         bodyText += `Soumis le : ${new Date().toLocaleString('fr-FR')}\n\n`;
-        bodyText += '---\n\n';
-
-        // Skip header row, format data nicely
-        for (let i = 1; i < lines.length; i++) {
-            // Parse CSV line
-            const matches = lines[i].match(/"([^"]*)"/g);
-            if (matches && matches.length >= 3) {
-                const label = matches[1].replace(/"/g, '');
-                const value = matches[2].replace(/"/g, '');
-                bodyText += `${label}: ${value}\n`;
-            }
-        }
-
-        bodyText += '\n---\n';
-        bodyText += 'Généré par Créateur de Formulaires';
+        bodyText += csvContent;
+        bodyText += '\n\n---\nGénéré par Créateur de Formulaires';
 
         const body = encodeURIComponent(bodyText);
+
+        // Also trigger CSV file download so user can attach it
+        this.downloadCSV(csvContent, `${formTitle.replace(/[^a-z0-9]/gi, '_')}_reponse.csv`);
+
         window.location.href = `mailto:${recipientEmail}?subject=${subject}&body=${body}`;
     },
 
